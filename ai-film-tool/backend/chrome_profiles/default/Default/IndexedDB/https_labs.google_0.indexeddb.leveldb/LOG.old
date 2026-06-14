@@ -1,0 +1,5 @@
+2026/06/14-20:11:38.092 6f44 Reusing MANIFEST D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\IndexedDB\https_labs.google_0.indexeddb.leveldb/MANIFEST-000001
+2026/06/14-20:11:38.092 6f44 Recovering log #14
+2026/06/14-20:11:38.092 6f44 Reusing old log D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\IndexedDB\https_labs.google_0.indexeddb.leveldb/000014.log 
+2026/06/14-20:11:38.093 6f44 Delete type=2 #12
+2026/06/14-20:11:38.130 6b48 Manual compaction at level-0 from '\x00\x08\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x09\x00\x00\x00' @ 0 : 0; will stop at (end)
