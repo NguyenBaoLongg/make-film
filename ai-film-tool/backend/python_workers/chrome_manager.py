@@ -14,9 +14,23 @@ PROFILES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'c
 
 def get_profile_path(profile_name: str) -> str:
     """Trả về đường dẫn thư mục profile"""
+    chrome_user_data_dir = os.environ.get("CHROME_USER_DATA_DIR", "").strip()
+    if chrome_user_data_dir:
+        return chrome_user_data_dir
+
     path = os.path.join(PROFILES_DIR, profile_name)
     os.makedirs(path, exist_ok=True)
     return path
+
+def chrome_launch_args():
+    args = [
+        '--start-maximized',
+        '--disable-blink-features=AutomationControlled',
+    ]
+    profile_directory = os.environ.get("CHROME_PROFILE_DIRECTORY", "").strip()
+    if profile_directory:
+        args.append(f"--profile-directory={profile_directory}")
+    return args
 
 def list_profiles():
     """Liệt kê tất cả profiles đã tạo"""
@@ -55,10 +69,7 @@ def launch_login_browser(profile_name: str, url: str = "https://accounts.google.
             user_data_dir=profile_path,
             headless=False,
             channel="chrome",  # Dùng Chrome đã cài trên máy (không phải Chromium)
-            args=[
-                '--start-maximized',
-                '--disable-blink-features=AutomationControlled',  # Ẩn dấu hiệu automation
-            ],
+            args=chrome_launch_args(),
             ignore_default_args=['--enable-automation'],
             no_viewport=True,  # Cho phép resize tự do
         )

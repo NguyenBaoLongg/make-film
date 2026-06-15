@@ -1,3 +1,6 @@
-2026/06/14-20:11:44.175 4504 Reusing MANIFEST D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\shared_proto_db/MANIFEST-000001
-2026/06/14-20:11:44.175 4504 Recovering log #3
-2026/06/14-20:11:44.176 4504 Reusing old log D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\shared_proto_db/000003.log 
+2026/06/15-13:28:57.758 68f4 Reusing MANIFEST D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\shared_proto_db/MANIFEST-000001
+2026/06/15-13:28:57.759 68f4 Recovering log #3
+2026/06/15-13:28:57.760 68f4 Reusing old log D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\shared_proto_db/000003.log 
+2026/06/15-13:28:57.775 5a04 Level-0 table #5: started
+2026/06/15-13:28:57.778 5a04 Level-0 table #5: 102394 bytes OK
+2026/06/15-13:28:57.779 5a04 Delete type=0 #3

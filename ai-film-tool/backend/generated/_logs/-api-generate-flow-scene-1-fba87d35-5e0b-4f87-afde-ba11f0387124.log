@@ -1,0 +1,262 @@
+[2026-06-15T05:38:00.331Z] job started: type=scene, scene=1
+[2026-06-15T05:38:00.332Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-fba87d35-5e0b-4f87-afde-ba11f0387124.json
+[2026-06-15T05:38:01.202Z] worker: [BOT] \U0001f310 \u0110ang m\u1edf trang web Google Flow...
+[2026-06-15T05:38:06.563Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T05:38:06.895Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501880581_scene_001\02_opened.png
+[2026-06-15T05:38:13.218Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501880581_scene_001\03_composer_not_found.png
+[2026-06-15T05:38:13.446Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T05:38:13.447Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:13.447Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 882, in run_job
+[2026-06-15T05:38:13.448Z] worker:     output_paths = process_scene_job(page, job, debug)
+[2026-06-15T05:38:13.448Z] worker:                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-06-15T05:38:13.448Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 825, in process_scene_job
+[2026-06-15T05:38:13.449Z] worker:     open_flow_target(page, job, debug)
+[2026-06-15T05:38:13.449Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 756, in open_flow_target
+[2026-06-15T05:38:13.449Z] worker:     enter_flow_workspace(page, debug)
+[2026-06-15T05:38:13.449Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 383, in enter_flow_workspace
+[2026-06-15T05:38:13.449Z] worker:     raise RuntimeError("[BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!")
+[2026-06-15T05:38:13.450Z] worker: RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!
+[2026-06-15T05:38:13.450Z] worker: The above exception was the direct cause of the following exception:
+[2026-06-15T05:38:13.450Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:13.450Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 959, in main
+[2026-06-15T05:38:13.450Z] worker:     result = run_job(job)
+[2026-06-15T05:38:13.451Z] worker:              ^^^^^^^^^^^^
+[2026-06-15T05:38:13.451Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 920, in run_job
+[2026-06-15T05:38:13.451Z] worker:     raise RuntimeError(f"{exc}. Debug: {shot or debug.dir}") from exc
+[2026-06-15T05:38:13.451Z] worker: RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501880581_scene_001
+[2026-06-15T05:38:13.451Z] worker: During handling of the above exception, another exception occurred:
+[2026-06-15T05:38:13.452Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:13.452Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 967, in <module>
+[2026-06-15T05:38:13.452Z] worker:     main()
+[2026-06-15T05:38:13.452Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 962, in main
+[2026-06-15T05:38:13.453Z] worker:     print(json.dumps({"status": "error", "message": str(exc)}, ensure_ascii=False))
+[2026-06-15T05:38:13.453Z] worker:   File "C:\Users\Acer\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+[2026-06-15T05:38:13.453Z] worker:     return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+[2026-06-15T05:38:13.453Z] worker:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-06-15T05:38:13.453Z] worker: UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 38: character maps to <undefined>
+[2026-06-15T05:38:13.474Z] failed: [BOT] \U0001f310 \u0110ang m\u1edf trang web Google Flow...
+Progress: opened https://labs.google/fx/vi/tools/flow
+[FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501880581_scene_001\02_opened.png
+[FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501880581_scene_001\03_composer_not_found.png
+[FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 882, in run_job
+    output_paths = process_scene_job(page, job, debug)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 825, in process_scene_job
+    open_flow_target(page, job, debug)
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 756, in open_flow_target
+    enter_flow_workspace(page, debug)
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 383, in enter_flow_workspace
+    raise RuntimeError("[BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!")
+RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 959, in main
+    result = run_job(job)
+             ^^^^^^^^^^^^
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 920, in run_job
+    raise RuntimeError(f"{exc}. Debug: {shot or debug.dir}") from exc
+RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501880581_scene_001
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 967, in <module>
+    main()
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 962, in main
+    print(json.dumps({"status": "error", "message": str(exc)}, ensure_ascii=False))
+  File "C:\Users\Acer\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 38: character maps to <undefined>
+
+[2026-06-15T05:38:13.475Z] spawn: python D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-fba87d35-5e0b-4f87-afde-ba11f0387124.json
+[2026-06-15T05:38:14.319Z] worker: [BOT] \U0001f310 \u0110ang m\u1edf trang web Google Flow...
+[2026-06-15T05:38:19.244Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T05:38:19.649Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501893722_scene_001\02_opened.png
+[2026-06-15T05:38:24.612Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501893722_scene_001\03_composer_not_found.png
+[2026-06-15T05:38:24.831Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T05:38:24.832Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:24.832Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 882, in run_job
+[2026-06-15T05:38:24.832Z] worker:     output_paths = process_scene_job(page, job, debug)
+[2026-06-15T05:38:24.833Z] worker:                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-06-15T05:38:24.833Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 825, in process_scene_job
+[2026-06-15T05:38:24.833Z] worker:     open_flow_target(page, job, debug)
+[2026-06-15T05:38:24.833Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 756, in open_flow_target
+[2026-06-15T05:38:24.834Z] worker:     enter_flow_workspace(page, debug)
+[2026-06-15T05:38:24.834Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 383, in enter_flow_workspace
+[2026-06-15T05:38:24.834Z] worker:     raise RuntimeError("[BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!")
+[2026-06-15T05:38:24.834Z] worker: RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!
+[2026-06-15T05:38:24.835Z] worker: The above exception was the direct cause of the following exception:
+[2026-06-15T05:38:24.835Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:24.835Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 959, in main
+[2026-06-15T05:38:24.835Z] worker:     result = run_job(job)
+[2026-06-15T05:38:24.835Z] worker:              ^^^^^^^^^^^^
+[2026-06-15T05:38:24.835Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 920, in run_job
+[2026-06-15T05:38:24.836Z] worker:     raise RuntimeError(f"{exc}. Debug: {shot or debug.dir}") from exc
+[2026-06-15T05:38:24.836Z] worker: RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501893722_scene_001
+[2026-06-15T05:38:24.836Z] worker: During handling of the above exception, another exception occurred:
+[2026-06-15T05:38:24.837Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:24.837Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 967, in <module>
+[2026-06-15T05:38:24.837Z] worker:     main()
+[2026-06-15T05:38:24.837Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 962, in main
+[2026-06-15T05:38:24.838Z] worker:     print(json.dumps({"status": "error", "message": str(exc)}, ensure_ascii=False))
+[2026-06-15T05:38:24.838Z] worker:   File "C:\Users\Acer\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+[2026-06-15T05:38:24.838Z] worker:     return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+[2026-06-15T05:38:24.838Z] worker:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-06-15T05:38:24.839Z] worker: UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 38: character maps to <undefined>
+[2026-06-15T05:38:24.867Z] failed: [BOT] \U0001f310 \u0110ang m\u1edf trang web Google Flow...
+Progress: opened https://labs.google/fx/vi/tools/flow
+[FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501893722_scene_001\02_opened.png
+[FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501893722_scene_001\03_composer_not_found.png
+[FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 882, in run_job
+    output_paths = process_scene_job(page, job, debug)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 825, in process_scene_job
+    open_flow_target(page, job, debug)
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 756, in open_flow_target
+    enter_flow_workspace(page, debug)
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 383, in enter_flow_workspace
+    raise RuntimeError("[BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!")
+RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 959, in main
+    result = run_job(job)
+             ^^^^^^^^^^^^
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 920, in run_job
+    raise RuntimeError(f"{exc}. Debug: {shot or debug.dir}") from exc
+RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501893722_scene_001
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 967, in <module>
+    main()
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 962, in main
+    print(json.dumps({"status": "error", "message": str(exc)}, ensure_ascii=False))
+  File "C:\Users\Acer\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 38: character maps to <undefined>
+
+[2026-06-15T05:38:24.867Z] spawn: py -3 D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-fba87d35-5e0b-4f87-afde-ba11f0387124.json
+[2026-06-15T05:38:25.805Z] worker: [BOT] \U0001f310 \u0110ang m\u1edf trang web Google Flow...
+[2026-06-15T05:38:30.681Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T05:38:31.110Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001\02_opened.png
+[2026-06-15T05:38:36.484Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001\03_composer_not_found.png
+[2026-06-15T05:38:36.761Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T05:38:36.762Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:36.763Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 882, in run_job
+[2026-06-15T05:38:36.763Z] worker:     output_paths = process_scene_job(page, job, debug)
+[2026-06-15T05:38:36.764Z] worker:                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-06-15T05:38:36.765Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 825, in process_scene_job
+[2026-06-15T05:38:36.765Z] worker:     open_flow_target(page, job, debug)
+[2026-06-15T05:38:36.766Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 756, in open_flow_target
+[2026-06-15T05:38:36.766Z] worker:     enter_flow_workspace(page, debug)
+[2026-06-15T05:38:36.767Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 383, in enter_flow_workspace
+[2026-06-15T05:38:36.767Z] worker:     raise RuntimeError("[BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!")
+[2026-06-15T05:38:36.768Z] worker: RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!
+[2026-06-15T05:38:36.768Z] worker: The above exception was the direct cause of the following exception:
+[2026-06-15T05:38:36.769Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:36.769Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 959, in main
+[2026-06-15T05:38:36.770Z] worker:     result = run_job(job)
+[2026-06-15T05:38:36.771Z] worker:              ^^^^^^^^^^^^
+[2026-06-15T05:38:36.771Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 920, in run_job
+[2026-06-15T05:38:36.771Z] worker:     raise RuntimeError(f"{exc}. Debug: {shot or debug.dir}") from exc
+[2026-06-15T05:38:36.772Z] worker: RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001
+[2026-06-15T05:38:36.772Z] worker: During handling of the above exception, another exception occurred:
+[2026-06-15T05:38:36.772Z] worker: Traceback (most recent call last):
+[2026-06-15T05:38:36.773Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 967, in <module>
+[2026-06-15T05:38:36.774Z] worker:     main()
+[2026-06-15T05:38:36.774Z] worker:   File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 962, in main
+[2026-06-15T05:38:36.775Z] worker:     print(json.dumps({"status": "error", "message": str(exc)}, ensure_ascii=False))
+[2026-06-15T05:38:36.776Z] worker:   File "C:\Users\Acer\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+[2026-06-15T05:38:36.776Z] worker:     return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+[2026-06-15T05:38:36.777Z] worker:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-06-15T05:38:36.778Z] worker: UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 38: character maps to <undefined>
+[2026-06-15T05:38:36.819Z] failed: [BOT] \U0001f310 \u0110ang m\u1edf trang web Google Flow...
+Progress: opened https://labs.google/fx/vi/tools/flow
+[FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001\02_opened.png
+[FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001\03_composer_not_found.png
+[FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 882, in run_job
+    output_paths = process_scene_job(page, job, debug)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 825, in process_scene_job
+    open_flow_target(page, job, debug)
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 756, in open_flow_target
+    enter_flow_workspace(page, debug)
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 383, in enter_flow_workspace
+    raise RuntimeError("[BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!")
+RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 959, in main
+    result = run_job(job)
+             ^^^^^^^^^^^^
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 920, in run_job
+    raise RuntimeError(f"{exc}. Debug: {shot or debug.dir}") from exc
+RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 967, in <module>
+    main()
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 962, in main
+    print(json.dumps({"status": "error", "message": str(exc)}, ensure_ascii=False))
+  File "C:\Users\Acer\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 38: character maps to <undefined>
+
+[2026-06-15T05:38:36.820Z] job failed: [BOT] \U0001f310 \u0110ang m\u1edf trang web Google Flow...
+Progress: opened https://labs.google/fx/vi/tools/flow
+[FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001\02_opened.png
+[FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001\03_composer_not_found.png
+[FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 882, in run_job
+    output_paths = process_scene_job(page, job, debug)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 825, in process_scene_job
+    open_flow_target(page, job, debug)
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 756, in open_flow_target
+    enter_flow_workspace(page, debug)
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 383, in enter_flow_workspace
+    raise RuntimeError("[BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!")
+RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 959, in main
+    result = run_job(job)
+             ^^^^^^^^^^^^
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 920, in run_job
+    raise RuntimeError(f"{exc}. Debug: {shot or debug.dir}") from exc
+RuntimeError: [BOT] \u274c L\u1ed7i: Kh�ng t�m th\u1ea5y � nh\u1eadp Prompt (Composer). C� th\u1ec3 m\u1ea1ng ch\u1eadm ho\u1eb7c b\u1ecb che b\u1edfi popup. H�y xem \u1ea3nh Screenshot l\u1ed7i!. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781501905129_scene_001
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 967, in <module>
+    main()
+  File "D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py", line 962, in main
+    print(json.dumps({"status": "error", "message": str(exc)}, ensure_ascii=False))
+  File "C:\Users\Acer\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 38: character maps to <undefined>
+

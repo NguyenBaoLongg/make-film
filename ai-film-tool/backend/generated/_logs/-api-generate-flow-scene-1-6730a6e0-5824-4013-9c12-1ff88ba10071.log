@@ -1,0 +1,56 @@
+[2026-06-15T05:53:15.968Z] job started: type=scene, scene=1
+[2026-06-15T05:53:15.970Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-6730a6e0-5824-4013-9c12-1ff88ba10071.json
+[2026-06-15T05:53:16.742Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-15T05:53:21.738Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T05:53:22.119Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502796185_scene_001\02_opened.png
+[2026-06-15T05:53:22.658Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-15T05:53:25.243Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502796185_scene_001\04_after_D_n_m_i.png
+[2026-06-15T05:53:25.605Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-15T05:53:25.653Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-15T05:53:25.654Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-15T05:53:28.387Z] worker: [BOT] ☁️ Đã đẩy 5 file lên thư viện ngầm. Đang chờ xử lý...
+[2026-06-15T05:53:31.401Z] worker: [BOT] ☁️ Đang đính kèm 5 ảnh vào ô chat (sẽ chờ nếu ảnh đang tải lên)...
+[2026-06-15T05:54:03.506Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T05:54:03.507Z] result: {"status": "error", "message": "Timeout 30000ms exceeded while waiting for event \"filechooser\"\n=========================== logs ===========================\nwaiting for event \"filechooser\"\n============================================================. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781502796185_scene_001"}
+[2026-06-15T05:54:03.528Z] failed: Timeout 30000ms exceeded while waiting for event "filechooser"
+=========================== logs ===========================
+waiting for event "filechooser"
+============================================================. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502796185_scene_001
+[2026-06-15T05:54:03.529Z] spawn: python D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-6730a6e0-5824-4013-9c12-1ff88ba10071.json
+[2026-06-15T05:54:04.202Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-15T05:54:09.069Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T05:54:09.520Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502843750_scene_001\02_opened.png
+[2026-06-15T05:54:10.066Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-15T05:54:12.743Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502843750_scene_001\04_after_D_n_m_i.png
+[2026-06-15T05:54:13.130Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-15T05:54:13.211Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-15T05:54:13.211Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-15T05:54:16.177Z] worker: [BOT] ☁️ Đã đẩy 5 file lên thư viện ngầm. Đang chờ xử lý...
+[2026-06-15T05:54:19.190Z] worker: [BOT] ☁️ Đang đính kèm 5 ảnh vào ô chat (sẽ chờ nếu ảnh đang tải lên)...
+[2026-06-15T05:54:51.314Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T05:54:51.315Z] result: {"status": "error", "message": "Timeout 30000ms exceeded while waiting for event \"filechooser\"\n=========================== logs ===========================\nwaiting for event \"filechooser\"\n============================================================. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781502843750_scene_001"}
+[2026-06-15T05:54:51.344Z] failed: Timeout 30000ms exceeded while waiting for event "filechooser"
+=========================== logs ===========================
+waiting for event "filechooser"
+============================================================. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502843750_scene_001
+[2026-06-15T05:54:51.345Z] spawn: py -3 D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-6730a6e0-5824-4013-9c12-1ff88ba10071.json
+[2026-06-15T05:54:52.082Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-15T05:54:56.917Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T05:54:57.308Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502891578_scene_001\02_opened.png
+[2026-06-15T05:54:57.939Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-15T05:55:00.633Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502891578_scene_001\04_after_D_n_m_i.png
+[2026-06-15T05:55:00.968Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-15T05:55:01.037Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-15T05:55:01.038Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-15T05:55:04.150Z] worker: [BOT] ☁️ Đã đẩy 5 file lên thư viện ngầm. Đang chờ xử lý...
+[2026-06-15T05:55:07.151Z] worker: [BOT] ☁️ Đang đính kèm 5 ảnh vào ô chat (sẽ chờ nếu ảnh đang tải lên)...
+[2026-06-15T05:55:39.386Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T05:55:39.387Z] result: {"status": "error", "message": "Timeout 30000ms exceeded while waiting for event \"filechooser\"\n=========================== logs ===========================\nwaiting for event \"filechooser\"\n============================================================. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781502891578_scene_001"}
+[2026-06-15T05:55:39.445Z] failed: Timeout 30000ms exceeded while waiting for event "filechooser"
+=========================== logs ===========================
+waiting for event "filechooser"
+============================================================. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502891578_scene_001
+[2026-06-15T05:55:39.445Z] job failed: Timeout 30000ms exceeded while waiting for event "filechooser"
+=========================== logs ===========================
+waiting for event "filechooser"
+============================================================. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781502891578_scene_001

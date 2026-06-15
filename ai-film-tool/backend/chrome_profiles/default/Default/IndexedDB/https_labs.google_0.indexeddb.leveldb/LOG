@@ -1,4 +1,14 @@
-2026/06/14-20:11:45.673 6b60 Reusing MANIFEST D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\IndexedDB\https_labs.google_0.indexeddb.leveldb/MANIFEST-000001
-2026/06/14-20:11:45.673 6b60 Recovering log #14
-2026/06/14-20:11:45.674 6b60 Reusing old log D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\IndexedDB\https_labs.google_0.indexeddb.leveldb/000014.log 
-2026/06/14-20:11:46.296 6b60 Manual compaction at level-0 from '\x00\x09\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0a\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/06/15-13:28:58.729 65e4 Reusing MANIFEST D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\IndexedDB\https_labs.google_0.indexeddb.leveldb/MANIFEST-000001
+2026/06/15-13:28:58.730 65e4 Recovering log #174
+2026/06/15-13:28:58.730 65e4 Reusing old log D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\IndexedDB\https_labs.google_0.indexeddb.leveldb/000174.log 
+2026/06/15-13:28:58.730 65e4 Delete type=2 #172
+2026/06/15-13:28:58.751 68f4 Level-0 table #179: started
+2026/06/15-13:28:58.752 68f4 Level-0 table #179: 1178 bytes OK
+2026/06/15-13:28:58.752 68f4 Delete type=0 #174
+2026/06/15-13:28:58.753 5a04 Manual compaction at level-0 from '\x004\x00\x00\x00' @ 72057594037927935 : 1 .. '\x005\x00\x00\x00' @ 0 : 0; will stop at '\x004\x00\x00\x05' @ 1903 : 1
+2026/06/15-13:28:58.753 5a04 Compacting 1@0 + 1@1 files
+2026/06/15-13:28:58.754 5a04 Generated table #180@0: 155 keys, 3479 bytes
+2026/06/15-13:28:58.754 5a04 Compacted 1@0 + 1@1 files => 3479 bytes
+2026/06/15-13:28:58.754 5a04 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/06/15-13:28:58.754 5a04 Delete type=2 #179
+2026/06/15-13:28:58.754 5a04 Manual compaction at level-0 from '\x004\x00\x00\x05' @ 1903 : 1 .. '\x005\x00\x00\x00' @ 0 : 0; will stop at (end)

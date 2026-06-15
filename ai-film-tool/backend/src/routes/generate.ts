@@ -9,9 +9,10 @@ const router = Router();
 
 const generatedDir = path.join(process.cwd(), 'generated');
 const jobsDir = path.join(process.cwd(), 'tmp', 'jobs');
+const workerLogsDir = path.join(generatedDir, '_logs');
 const flowWorkerScript = path.join(process.cwd(), 'python_workers', 'browser_automation.py');
 
-type WorkerType = 'image' | 'video';
+type WorkerType = 'image' | 'video' | 'scene';
 
 interface PythonCandidate {
   command: string;
@@ -20,7 +21,9 @@ interface PythonCandidate {
 
 interface FlowJobPayload {
   type: WorkerType;
-  prompt: string;
+  prompt?: string;
+  image_prompt?: string;
+  video_prompt?: string;
   profile: string;
   flow_url: string;
   headless: boolean;
@@ -30,6 +33,9 @@ interface FlowJobPayload {
   scene_index?: number;
   reference_images?: string[];
   source_image_url?: string;
+  project_url?: string;
+  create_project?: boolean;
+  run_id?: string;
   options?: Record<string, unknown>;
 }
 
@@ -42,6 +48,7 @@ interface ProcessResult {
 function ensureRuntimeDirs() {
   fs.mkdirSync(generatedDir, { recursive: true });
   fs.mkdirSync(jobsDir, { recursive: true });
+  fs.mkdirSync(workerLogsDir, { recursive: true });
 }
 
 function publicUrlForFile(filePath: string) {
@@ -54,6 +61,20 @@ function sanitizeFilePart(value: string) {
     .replace(/[^\w.-]+/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 80) || 'film';
+}
+
+function safeRunId(value: string) {
+  return sanitizeFilePart(value || crypto.randomUUID()).slice(0, 120);
+}
+
+function logPathForRunId(runId: string) {
+  return path.join(workerLogsDir, `${safeRunId(runId)}.log`);
+}
+
+function appendWorkerLog(runId: string, message: string) {
+  ensureRuntimeDirs();
+  const line = `[${new Date().toISOString()}] ${message.replace(/\r?\n/g, '\n')}\n`;
+  fs.appendFileSync(logPathForRunId(runId), line, 'utf8');
 }
 
 function getPythonCandidates(): PythonCandidate[] {
@@ -77,21 +98,32 @@ function getPythonCandidates(): PythonCandidate[] {
   return candidates;
 }
 
-function runProcess(command: string, args: string[]): Promise<ProcessResult> {
+function runProcess(
+  command: string,
+  args: string[],
+  onOutput?: (stream: 'stdout' | 'stderr', text: string) => void,
+): Promise<ProcessResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { windowsHide: true });
     let stdout = '';
     let stderr = '';
 
     child.stdout.on('data', (data) => {
-      stdout += data.toString();
+      const text = data.toString();
+      stdout += text;
+      onOutput?.('stdout', text);
     });
 
     child.stderr.on('data', (data) => {
-      stderr += data.toString();
+      const text = data.toString();
+      stderr += text;
+      onOutput?.('stderr', text);
     });
 
-    child.on('error', reject);
+    child.on('error', (error) => {
+      onOutput?.('stderr', error.message);
+      reject(error);
+    });
     child.on('close', (code) => resolve({ code, stdout, stderr }));
   });
 }
@@ -110,35 +142,55 @@ function parseWorkerJson(stdout: string) {
 
 async function runFlowWorker(payload: FlowJobPayload) {
   ensureRuntimeDirs();
-  const jobId = crypto.randomUUID();
+  const jobId = safeRunId(payload.run_id || crypto.randomUUID());
   const jobPath = path.join(jobsDir, `${jobId}.json`);
   fs.writeFileSync(jobPath, JSON.stringify(payload, null, 2), 'utf8');
+  fs.writeFileSync(logPathForRunId(jobId), '', 'utf8');
+  appendWorkerLog(jobId, `job started: type=${payload.type}, scene=${payload.scene_index || 1}`);
 
   let lastError = '';
 
   for (const candidate of getPythonCandidates()) {
     const args = [...candidate.argsPrefix, flowWorkerScript, '--job', jobPath];
     console.log(`[Flow Worker] ${candidate.command} ${args.join(' ')}`);
+    appendWorkerLog(jobId, `spawn: ${candidate.command} ${args.join(' ')}`);
 
     try {
-      const result = await runProcess(candidate.command, args);
+      const result = await runProcess(candidate.command, args, (stream, text) => {
+        const label = stream === 'stderr' ? 'worker' : 'result';
+        for (const line of text.split(/\r?\n/).filter(Boolean)) {
+          if (line.startsWith('[BOT]') || line.startsWith('Progress:')) {
+            console.log(line);
+          } else {
+            // Keep debug logs out of the main console output to keep it clean, but save to file
+          }
+          appendWorkerLog(jobId, `${label}: ${line}`);
+        }
+      });
+      const parsed = result.stdout.trim() ? parseWorkerJson(result.stdout) : null;
       if (result.code !== 0) {
-        lastError = result.stderr || result.stdout || `Python exited with code ${result.code}`;
+        lastError = parsed?.message || result.stderr || result.stdout || `Python exited with code ${result.code}`;
         console.error(`[Flow Worker] failed with ${candidate.command}: ${lastError}`);
+        appendWorkerLog(jobId, `failed: ${lastError}`);
         continue;
       }
 
-      const parsed = parseWorkerJson(result.stdout);
+      if (!parsed) {
+        throw new Error('Python worker produced no JSON output');
+      }
       if (parsed.status === 'error') {
         throw new Error(parsed.message || 'Flow worker returned error');
       }
+      appendWorkerLog(jobId, 'job completed successfully');
       return parsed;
     } catch (error: any) {
       lastError = error?.message || String(error);
       console.error(`[Flow Worker] failed with ${candidate.command}: ${lastError}`);
+      appendWorkerLog(jobId, `error: ${lastError}`);
     }
   }
 
+  appendWorkerLog(jobId, `job failed: ${lastError}`);
   throw new Error(`Could not run Python Flow worker. ${lastError}`);
 }
 
@@ -216,6 +268,17 @@ router.get('/mock-video', (req, res) => {
   });
 });
 
+router.get('/logs/:runId', (req, res) => {
+  try {
+    const runId = safeRunId(req.params.runId);
+    const filePath = logPathForRunId(runId);
+    const text = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+    res.json({ runId, text });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/flow-image', async (req, res) => {
   const {
     prompt,
@@ -224,6 +287,9 @@ router.post('/flow-image', async (req, res) => {
     options = {},
     filePrefix = 'film',
     sceneIndex = 1,
+    projectUrl = '',
+    createProject = false,
+    runId = '',
   } = req.body;
 
   if (!prompt || typeof prompt !== 'string') {
@@ -242,6 +308,9 @@ router.post('/flow-image', async (req, res) => {
       file_prefix: sanitizeFilePart(filePrefix),
       scene_index: Number(sceneIndex) || 1,
       reference_images: Array.isArray(referenceImages) ? referenceImages : [],
+      project_url: typeof projectUrl === 'string' ? projectUrl : '',
+      create_project: Boolean(createProject),
+      run_id: typeof runId === 'string' ? runId : '',
       options,
     });
 
@@ -259,6 +328,8 @@ router.post('/flow-video', async (req, res) => {
     options = {},
     filePrefix = 'film',
     sceneIndex = 1,
+    projectUrl = '',
+    runId = '',
   } = req.body;
 
   if (!prompt || typeof prompt !== 'string') {
@@ -281,6 +352,55 @@ router.post('/flow-video', async (req, res) => {
       file_prefix: sanitizeFilePart(filePrefix),
       scene_index: Number(sceneIndex) || 1,
       source_image_url: sourceImageUrl,
+      project_url: typeof projectUrl === 'string' ? projectUrl : '',
+      run_id: typeof runId === 'string' ? runId : '',
+      options,
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/flow-scene', async (req, res) => {
+  const {
+    imagePrompt,
+    videoPrompt,
+    profile = 'default',
+    referenceImages = [],
+    options = {},
+    filePrefix = 'film',
+    sceneIndex = 1,
+    projectUrl = '',
+    createProject = false,
+    runId = '',
+  } = req.body;
+
+  if (!imagePrompt || typeof imagePrompt !== 'string') {
+    return res.status(400).json({ error: 'imagePrompt is required' });
+  }
+
+  if (!videoPrompt || typeof videoPrompt !== 'string') {
+    return res.status(400).json({ error: 'videoPrompt is required' });
+  }
+
+  try {
+    const result = await runFlowWorker({
+      type: 'scene',
+      image_prompt: imagePrompt,
+      video_prompt: videoPrompt,
+      profile,
+      flow_url: config.googleFlowUrl,
+      headless: config.playwrightHeadless,
+      output_dir: generatedDir,
+      public_base_url: `${config.publicApiUrl.replace(/\/$/, '')}/generated`,
+      file_prefix: sanitizeFilePart(filePrefix),
+      scene_index: Number(sceneIndex) || 1,
+      reference_images: Array.isArray(referenceImages) ? referenceImages : [],
+      project_url: typeof projectUrl === 'string' ? projectUrl : '',
+      create_project: Boolean(createProject),
+      run_id: typeof runId === 'string' ? runId : '',
       options,
     });
 

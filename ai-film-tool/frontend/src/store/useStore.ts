@@ -34,6 +34,7 @@ export interface AppState {
   filePrefix: string;
   isRunning: boolean;
   pipelineProgress: { completed: number; total: number };
+  pipelineLogs: string[];
   savedProjects: Array<{ id: string; title: string; created_at: string }>;
   currentProjectId: string | null;
   onNodesChange: OnNodesChange;
@@ -44,6 +45,8 @@ export interface AppState {
   setConcurrency: (val: number) => void;
   setFilePrefix: (val: string) => void;
   setIsRunning: (val: boolean) => void;
+  clearPipelineLogs: () => void;
+  addPipelineLog: (message: string) => void;
   updateNodeData: (nodeId: string, data: Partial<BaseNodeData>) => void;
   updateNodeStatus: (nodeId: string, status: NodeStatus, errorMessage?: string) => void;
   runPipeline: () => Promise<void>;
@@ -55,10 +58,17 @@ interface GenerateResponse {
   status: string;
   result_url: string;
   local_path?: string;
+  project_url?: string;
+  image_result_url?: string;
+  image_local_path?: string;
+  video_result_url?: string;
+  video_local_path?: string;
   error?: string;
 }
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
+type LogFn = (message: string) => void;
 
 function nodeData(node: Node | undefined): BaseNodeData {
   return ((node?.data || {}) as BaseNodeData);
@@ -84,11 +94,27 @@ function sortedByScene(nodes: Node[]) {
   });
 }
 
-function collectReferenceImages(nodes: Node[]) {
-  return sortedByScene(nodes)
-    .filter((node) => node.type === 'mediaSource')
-    .map((node) => nodeData(node).image)
-    .filter((value): value is string => typeof value === 'string' && value.length > 0);
+function collectConnectedImageInputs(nodeId: string, nodes: Node[], edges: Edge[]) {
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const inputs: string[] = [];
+
+  for (const edge of edges.filter((item) => item.target === nodeId)) {
+    const sourceNode = byId.get(edge.source);
+    if (!sourceNode) continue;
+
+    const data = nodeData(sourceNode);
+    const image = sourceNode.type === 'mediaSource'
+      ? data.image
+      : sourceNode.type === 'imageGen'
+        ? data.resultUrl
+        : undefined;
+
+    if (typeof image === 'string' && image.length > 0) {
+      inputs.push(image);
+    }
+  }
+
+  return inputs;
 }
 
 function findConnectedVideos(imageId: string, nodes: Node[], edges: Edge[]) {
@@ -138,25 +164,102 @@ async function apiPost<T>(path: string, body: Record<string, unknown>): Promise<
   return payload as T;
 }
 
+function makeRunId(path: string, sceneIndex?: number) {
+  const suffix = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${path.replace(/[^a-z0-9]+/gi, '-')}-${sceneIndex || 0}-${suffix}`;
+}
+
+async function apiPostWithLog<T>(
+  path: string,
+  body: Record<string, unknown>,
+  onLog: LogFn,
+  sceneIndex?: number,
+): Promise<T> {
+  const session = await supabase.auth.getSession();
+  const token = session.data.session?.access_token;
+  if (!token) throw new Error('No auth token. Please login again.');
+
+  const runId = makeRunId(path, sceneIndex);
+  let seenLength = 0;
+  let stopped = false;
+
+  const pollLogs = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/generate/logs/${encodeURIComponent(runId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return;
+
+      const payload = await response.json() as { text?: string };
+      const text = payload.text || '';
+      if (text.length <= seenLength) return;
+
+      const next = text.slice(seenLength);
+      seenLength = text.length;
+      next.split(/\r?\n/).filter(Boolean).forEach((line) => onLog(line));
+    } catch {
+      // Log polling is best-effort; generation errors still come from the main request.
+    }
+  };
+
+  onLog(`[frontend] start ${path} runId=${runId}`);
+  const interval = window.setInterval(() => {
+    if (!stopped) void pollLogs();
+  }, 1500);
+
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ...body, runId }),
+    });
+
+    await pollLogs();
+    const text = await response.text();
+    const payload = text ? JSON.parse(text) : {};
+
+    if (!response.ok) {
+      throw new Error(payload.error || payload.message || response.statusText);
+    }
+
+    onLog(`[frontend] done ${path}`);
+    return payload as T;
+  } finally {
+    stopped = true;
+    window.clearInterval(interval);
+    await pollLogs();
+  }
+}
+
 async function createFlowImage(params: {
   prompt: string;
   referenceImages: string[];
   node: Node;
   filePrefix: string;
   sceneIndex: number;
+  projectUrl?: string;
+  createProject?: boolean;
+  onLog: LogFn;
 }) {
-  return apiPost<GenerateResponse>('/api/generate/flow-image', {
+  return apiPostWithLog<GenerateResponse>('/api/generate/flow-image', {
     prompt: params.prompt,
     referenceImages: params.referenceImages,
     filePrefix: params.filePrefix,
     sceneIndex: params.sceneIndex,
+    projectUrl: params.projectUrl || '',
+    createProject: Boolean(params.createProject),
     profile: 'default',
     options: {
-      model: dataString(params.node, 'model'),
-      resolution: dataString(params.node, 'resolution'),
-      ratio: dataString(params.node, 'ratio'),
+      imageModel: dataString(params.node, 'model'),
+      imageResolution: dataString(params.node, 'resolution'),
+      imageRatio: dataString(params.node, 'ratio'),
     },
-  });
+  }, params.onLog, params.sceneIndex);
 }
 
 async function createFlowVideo(params: {
@@ -165,22 +268,60 @@ async function createFlowVideo(params: {
   node: Node;
   filePrefix: string;
   sceneIndex: number;
+  projectUrl?: string;
+  onLog: LogFn;
 }) {
-  return apiPost<GenerateResponse>('/api/generate/flow-video', {
+  return apiPostWithLog<GenerateResponse>('/api/generate/flow-video', {
     prompt: params.prompt,
     sourceImageUrl: params.sourceImageUrl,
     filePrefix: params.filePrefix,
     sceneIndex: params.sceneIndex,
+    projectUrl: params.projectUrl || '',
     profile: 'default',
     options: {
-      model: dataString(params.node, 'model'),
-      resolution: dataString(params.node, 'resolution'),
-      ratio: dataString(params.node, 'ratio'),
-      mode: dataString(params.node, 'mode'),
+      videoModel: dataString(params.node, 'model'),
+      videoResolution: dataString(params.node, 'resolution'),
+      videoRatio: dataString(params.node, 'ratio'),
+      videoMode: dataString(params.node, 'mode'),
       duration: nodeData(params.node).duration,
       voiceover: nodeData(params.node).voiceover,
     },
-  });
+  }, params.onLog, params.sceneIndex);
+}
+
+async function createFlowScene(params: {
+  imagePrompt: string;
+  videoPrompt: string;
+  referenceImages: string[];
+  imageNode: Node;
+  videoNode: Node;
+  filePrefix: string;
+  sceneIndex: number;
+  projectUrl?: string;
+  createProject?: boolean;
+  onLog: LogFn;
+}) {
+  return apiPostWithLog<GenerateResponse>('/api/generate/flow-scene', {
+    imagePrompt: params.imagePrompt,
+    videoPrompt: params.videoPrompt,
+    referenceImages: params.referenceImages,
+    filePrefix: params.filePrefix,
+    sceneIndex: params.sceneIndex,
+    projectUrl: params.projectUrl || '',
+    createProject: Boolean(params.createProject),
+    profile: 'default',
+    options: {
+      imageModel: dataString(params.imageNode, 'model'),
+      imageResolution: dataString(params.imageNode, 'resolution'),
+      imageRatio: dataString(params.imageNode, 'ratio'),
+      videoModel: dataString(params.videoNode, 'model'),
+      videoResolution: dataString(params.videoNode, 'resolution'),
+      videoRatio: dataString(params.videoNode, 'ratio'),
+      videoMode: dataString(params.videoNode, 'mode'),
+      duration: nodeData(params.videoNode).duration,
+      voiceover: nodeData(params.videoNode).voiceover,
+    },
+  }, params.onLog, params.sceneIndex);
 }
 
 async function concatVideos(videoUrls: string[], filePrefix: string) {
@@ -197,6 +338,7 @@ export const useStore = create<AppState>((set, get) => ({
   filePrefix: 'FILM_',
   isRunning: false,
   pipelineProgress: { completed: 0, total: 0 },
+  pipelineLogs: [],
   savedProjects: [],
   currentProjectId: null,
 
@@ -223,6 +365,11 @@ export const useStore = create<AppState>((set, get) => ({
   setConcurrency: (val) => set({ concurrency: val }),
   setFilePrefix: (val) => set({ filePrefix: val }),
   setIsRunning: (val) => set({ isRunning: val }),
+  clearPipelineLogs: () => set({ pipelineLogs: [] }),
+  addPipelineLog: (message) => {
+    const timestamp = new Date().toLocaleTimeString();
+    set({ pipelineLogs: [...get().pipelineLogs.slice(-300), `[${timestamp}] ${message}`] });
+  },
 
   updateNodeData: (nodeId, data) => {
     set({
@@ -275,7 +422,9 @@ export const useStore = create<AppState>((set, get) => ({
       nodes: resetNodes,
       isRunning: true,
       pipelineProgress: { completed: 0, total: totalSteps },
+      pipelineLogs: [],
     });
+    get().addPipelineLog(`Pipeline started: ${imageNodes.length} image node(s), ${videoNodes.length} video node(s).`);
 
     let completed = 0;
     const markStepDone = () => {
@@ -284,11 +433,13 @@ export const useStore = create<AppState>((set, get) => ({
     };
 
     try {
-      const referenceImages = collectReferenceImages(get().nodes);
       const pairedVideoIds = new Set<string>();
+      let flowProjectUrl = '';
+      let shouldCreateProject = true;
 
       for (const mediaNode of mediaNodes) {
         get().updateNodeStatus(mediaNode.id, 'completed');
+        get().addPipelineLog(`Media ready: ${mediaNode.id}`);
         markStepDone();
       }
 
@@ -302,8 +453,65 @@ export const useStore = create<AppState>((set, get) => ({
 
         const sceneIndex = dataNumber(imageNode, 'sceneIndex', index + 1);
         const imagePrompt = dataString(imageNode, 'prompt', `Scene ${sceneIndex} image`);
+        const referenceImages = collectConnectedImageInputs(imageNode.id, get().nodes, initialEdges);
+        const videosForImage = findConnectedVideos(imageNode.id, get().nodes, initialEdges);
 
         get().updateNodeStatus(imageNode.id, 'processing');
+        get().addPipelineLog(`Scene ${sceneIndex}: start image node ${imageNode.id}, refs=${referenceImages.length}.`);
+
+        if (videosForImage.length === 1) {
+          const videoNodeBase = videosForImage[0];
+          const videoNode = get().nodes.find((node) => node.id === videoNodeBase.id);
+          if (!videoNode) continue;
+
+          pairedVideoIds.add(videoNode.id);
+          const videoPrompt = dataString(videoNode, 'motionPrompt', `Scene ${sceneIndex} motion`);
+          get().addPipelineLog(`Scene ${sceneIndex}: image+video will run in one Chrome session.`);
+
+          const sceneResult = await createFlowScene({
+            imagePrompt,
+            videoPrompt,
+            referenceImages,
+            imageNode,
+            videoNode,
+            filePrefix: get().filePrefix,
+            sceneIndex,
+            projectUrl: flowProjectUrl,
+            createProject: shouldCreateProject,
+            onLog: get().addPipelineLog,
+          });
+
+          flowProjectUrl = sceneResult.project_url || flowProjectUrl;
+          shouldCreateProject = false;
+
+          const imageUrl = sceneResult.image_result_url || sceneResult.result_url;
+          if (!imageUrl) {
+            throw new Error(`Image scene ${sceneIndex} finished without a result URL`);
+          }
+
+          get().updateNodeData(imageNode.id, {
+            resultUrl: imageUrl,
+            localPath: sceneResult.image_local_path,
+          });
+          get().updateNodeStatus(imageNode.id, 'completed');
+          get().addPipelineLog(`Scene ${sceneIndex}: image completed.`);
+          markStepDone();
+
+          get().updateNodeStatus(videoNode.id, 'processing');
+          const videoUrl = sceneResult.video_result_url || sceneResult.result_url;
+          if (!videoUrl) {
+            throw new Error(`Video scene ${sceneIndex} finished without a result URL`);
+          }
+
+          get().updateNodeData(videoNode.id, {
+            resultUrl: videoUrl,
+            localPath: sceneResult.video_local_path || sceneResult.local_path,
+          });
+          get().updateNodeStatus(videoNode.id, 'completed');
+          get().addPipelineLog(`Scene ${sceneIndex}: video completed.`);
+          markStepDone();
+          continue;
+        }
 
         const imageResult = await createFlowImage({
           prompt: imagePrompt,
@@ -311,7 +519,13 @@ export const useStore = create<AppState>((set, get) => ({
           node: imageNode,
           filePrefix: get().filePrefix,
           sceneIndex,
+          projectUrl: flowProjectUrl,
+          createProject: shouldCreateProject,
+          onLog: get().addPipelineLog,
         });
+
+        flowProjectUrl = imageResult.project_url || flowProjectUrl;
+        shouldCreateProject = false;
 
         if (!imageResult.result_url) {
           throw new Error(`Image scene ${sceneIndex} finished without a result URL`);
@@ -322,9 +536,9 @@ export const useStore = create<AppState>((set, get) => ({
           localPath: imageResult.local_path,
         });
         get().updateNodeStatus(imageNode.id, 'completed');
+        get().addPipelineLog(`Scene ${sceneIndex}: image completed.`);
         markStepDone();
 
-        const videosForImage = findConnectedVideos(imageNode.id, get().nodes, initialEdges);
         for (const videoNodeBase of videosForImage) {
           const videoNode = get().nodes.find((node) => node.id === videoNodeBase.id);
           if (!videoNode) continue;
@@ -332,6 +546,7 @@ export const useStore = create<AppState>((set, get) => ({
           pairedVideoIds.add(videoNode.id);
           const videoPrompt = dataString(videoNode, 'motionPrompt', `Scene ${sceneIndex} motion`);
           get().updateNodeStatus(videoNode.id, 'processing');
+          get().addPipelineLog(`Scene ${sceneIndex}: start video node ${videoNode.id}.`);
 
           const videoResult = await createFlowVideo({
             prompt: videoPrompt,
@@ -339,7 +554,11 @@ export const useStore = create<AppState>((set, get) => ({
             node: videoNode,
             filePrefix: get().filePrefix,
             sceneIndex,
+            projectUrl: flowProjectUrl,
+            onLog: get().addPipelineLog,
           });
+
+          flowProjectUrl = videoResult.project_url || flowProjectUrl;
 
           if (!videoResult.result_url) {
             throw new Error(`Video scene ${sceneIndex} finished without a result URL`);
@@ -350,6 +569,7 @@ export const useStore = create<AppState>((set, get) => ({
             localPath: videoResult.local_path,
           });
           get().updateNodeStatus(videoNode.id, 'completed');
+          get().addPipelineLog(`Scene ${sceneIndex}: video completed.`);
           markStepDone();
         }
       }
@@ -386,6 +606,7 @@ export const useStore = create<AppState>((set, get) => ({
         }
 
         get().updateNodeStatus(concatNode.id, 'processing');
+        get().addPipelineLog(`Concat started: ${videoUrls.length} video(s).`);
         const concatResult = await concatVideos(videoUrls, get().filePrefix);
 
         if (!concatResult.result_url) {
@@ -397,11 +618,13 @@ export const useStore = create<AppState>((set, get) => ({
           localPath: concatResult.local_path,
         });
         get().updateNodeStatus(concatNode.id, 'completed');
+        get().addPipelineLog('Concat completed.');
         markStepDone();
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error('[Pipeline] Failed:', error);
+      get().addPipelineLog(`Pipeline failed: ${message}`);
       for (const node of get().nodes) {
         const status = nodeData(node).status;
         if (status === 'processing') {
@@ -410,6 +633,7 @@ export const useStore = create<AppState>((set, get) => ({
       }
       throw error;
     } finally {
+      get().addPipelineLog('Pipeline stopped.');
       set({ isRunning: false });
     }
   },

@@ -1,0 +1,23 @@
+[2026-06-15T04:39:23.131Z] job started: type=scene, scene=1
+[2026-06-15T04:39:23.132Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-a4a70a60-9133-4fbf-a55e-b97d76b9c70c.json
+[2026-06-15T04:39:28.889Z] worker: [FlowWorker] opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T04:39:29.334Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498363348_scene_001\01_opened.png
+[2026-06-15T04:39:34.304Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498363348_scene_001\02_composer_not_found.png
+[2026-06-15T04:39:34.507Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T04:39:34.509Z] result: {"status": "error", "message": "Could not find Google Flow composer/prompt input after opening Flow.. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781498363348_scene_001"}
+[2026-06-15T04:39:34.537Z] failed: Could not find Google Flow composer/prompt input after opening Flow.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498363348_scene_001
+[2026-06-15T04:39:34.537Z] spawn: python D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-a4a70a60-9133-4fbf-a55e-b97d76b9c70c.json
+[2026-06-15T04:39:40.447Z] worker: [FlowWorker] opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T04:39:40.932Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498374785_scene_001\01_opened.png
+[2026-06-15T04:39:46.448Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498374785_scene_001\02_composer_not_found.png
+[2026-06-15T04:39:46.745Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T04:39:46.746Z] result: {"status": "error", "message": "Could not find Google Flow composer/prompt input after opening Flow.. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781498374785_scene_001"}
+[2026-06-15T04:39:46.801Z] failed: Could not find Google Flow composer/prompt input after opening Flow.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498374785_scene_001
+[2026-06-15T04:39:46.802Z] spawn: py -3 D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-a4a70a60-9133-4fbf-a55e-b97d76b9c70c.json
+[2026-06-15T04:39:52.539Z] worker: [FlowWorker] opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T04:39:52.945Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498387099_scene_001\01_opened.png
+[2026-06-15T04:39:58.005Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498387099_scene_001\02_composer_not_found.png
+[2026-06-15T04:39:58.254Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T04:39:58.255Z] result: {"status": "error", "message": "Could not find Google Flow composer/prompt input after opening Flow.. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781498387099_scene_001"}
+[2026-06-15T04:39:58.292Z] failed: Could not find Google Flow composer/prompt input after opening Flow.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498387099_scene_001
+[2026-06-15T04:39:58.293Z] job failed: Could not find Google Flow composer/prompt input after opening Flow.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781498387099_scene_001

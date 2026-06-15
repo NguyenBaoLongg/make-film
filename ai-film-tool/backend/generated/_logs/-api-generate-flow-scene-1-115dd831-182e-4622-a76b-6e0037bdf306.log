@@ -1,0 +1,56 @@
+[2026-06-15T06:25:29.902Z] job started: type=scene, scene=1
+[2026-06-15T06:25:29.903Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-115dd831-182e-4622-a76b-6e0037bdf306.json
+[2026-06-15T06:25:30.763Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-15T06:25:35.812Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T06:25:36.209Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781504730143_scene_001\02_opened.png
+[2026-06-15T06:25:36.684Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-15T06:25:39.289Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781504730143_scene_001\04_after_D_n_m_i.png
+[2026-06-15T06:25:39.633Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-15T06:25:39.674Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-15T06:25:39.675Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-15T06:25:44.143Z] worker: [BOT] ☁️ Đã đẩy 5 file lên hệ thống ngầm.
+[2026-06-15T06:25:44.144Z] worker: [BOT] ⏳ Đang chờ 30 giây để đảm bảo tất cả ảnh được tải lên thành công...
+[2026-06-15T06:26:14.156Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-15T06:26:16.664Z] worker: [BOT] ✅ Đã thêm ref_000.png vào câu lệnh.
+[2026-06-15T06:26:20.169Z] worker: [BOT] ✅ Đã thêm ref_001.png vào câu lệnh.
+[2026-06-15T06:26:23.646Z] worker: [BOT] ✅ Đã thêm ref_002.png vào câu lệnh.
+[2026-06-15T06:26:27.116Z] worker: [BOT] ✅ Đã thêm ref_003.png vào câu lệnh.
+[2026-06-15T06:26:33.541Z] worker: [BOT] ⚠️ Không tìm thấy nút 'Thêm vào câu lệnh' cho ref_004.png.
+[2026-06-15T06:26:33.542Z] worker: [BOT] ✅ Đính kèm tất cả file thành công!
+[2026-06-15T06:26:43.928Z] worker: [BOT] ⚠️ Gõ phím không ăn, thử chèn bằng Clipboard Paste...
+[2026-06-15T06:26:44.450Z] worker: Progress: filled prompt
+[2026-06-15T06:26:44.492Z] worker: Progress: clicked composer submit button
+[2026-06-15T06:26:47.727Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781504730143_scene_001\20_after_submit_image.png
+[2026-06-15T06:26:48.108Z] worker: Progress: found generated image
+[2026-06-15T06:26:56.187Z] worker: Progress: saved image to D:\workspace\Python\App\make film\ai-film-tool\backend\generated\FILM_scene_001_image_1781504739632.png
+[2026-06-15T06:26:56.188Z] worker: [BOT] 🎬 [2/2] Bắt đầu quá trình tạo Video từ Ảnh vừa tạo...
+[2026-06-15T06:26:56.188Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho video...
+[2026-06-15T06:27:28.923Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-15T06:27:28.924Z] result: {"status": "error", "message": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"button[aria-haspopup=\\\"menu\\\"]\").nth(5)\n    - locator resolved to <button type=\"button\" tabindex=\"-1\" id=\"radix-:r68:\" data-state=\"closed\" aria-haspopup=\"menu\" aria-expanded=\"false\" data-orientation=\"horizontal\" data-radix-collection-item=\"\" class=\"sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-d3791a4f-6 sc-afb29c84-2 ewGlDn famhRe kkTxKe glBdvh\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not stable\n    - retrying click action\n    - waiting 20ms\n    - waiting for element to be visible, enabled and stable\n  - element was detached from the DOM, retrying\n    - locator resolved to <button type=\"button\" tabindex=\"-1\" id=\"radix-:r6q:\" data-state=\"closed\" aria-haspopup=\"menu\" aria-expanded=\"false\" data-orientation=\"horizontal\" data-radix-collection-item=\"\" class=\"sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-d3791a4f-6 sc-afb29c84-2 ewGlDn famhRe kkTxKe glBdvh\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not stable\n    - retrying click action\n    - waiting 20ms\n    - waiting for element to be visible, enabled and stable\n    - element is not stable\n  - retrying click action\n    - waiting 100ms\n    - waiting for element to be visible, enabled and stable\n  - element was detached from the DOM, retrying\n. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781504730143_scene_001"}
+[2026-06-15T06:27:28.949Z] failed: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("button[aria-haspopup=\"menu\"]").nth(5)
+    - locator resolved to <button type="button" tabindex="-1" id="radix-:r68:" data-state="closed" aria-haspopup="menu" aria-expanded="false" data-orientation="horizontal" data-radix-collection-item="" class="sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-d3791a4f-6 sc-afb29c84-2 ewGlDn famhRe kkTxKe glBdvh">…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is not stable
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+  - element was detached from the DOM, retrying
+    - locator resolved to <button type="button" tabindex="-1" id="radix-:r6q:" data-state="closed" aria-haspopup="menu" aria-expanded="false" data-orientation="horizontal" data-radix-collection-item="" class="sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-d3791a4f-6 sc-afb29c84-2 ewGlDn famhRe kkTxKe glBdvh">…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is not stable
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is not stable
+  - retrying click action
+    - waiting 100ms
+    - waiting for element to be visible, enabled and stable
+  - element was detached from the DOM, retrying
+. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781504730143_scene_001
+[2026-06-15T06:27:28.950Z] spawn: python D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-115dd831-182e-4622-a76b-6e0037bdf306.json
+[2026-06-15T06:27:29.988Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-15T06:27:35.035Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow

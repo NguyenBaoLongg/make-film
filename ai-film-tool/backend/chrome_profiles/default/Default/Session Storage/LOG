@@ -1,3 +1,2 @@
-2026/06/14-20:11:44.176 6cb0 Reusing MANIFEST D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\Session Storage/MANIFEST-000001
-2026/06/14-20:11:44.177 6cb0 Recovering log #3
-2026/06/14-20:11:44.180 6cb0 Reusing old log D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\Session Storage/000003.log 
+2026/06/15-13:28:57.771 24dc Creating DB D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\Session Storage since it was missing.
+2026/06/15-13:28:57.789 24dc Reusing MANIFEST D:\workspace\Python\App\make film\ai-film-tool\backend\chrome_profiles\default\Default\Session Storage/MANIFEST-000001

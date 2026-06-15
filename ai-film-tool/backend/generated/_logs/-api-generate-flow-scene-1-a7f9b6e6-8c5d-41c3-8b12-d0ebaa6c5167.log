@@ -1,0 +1,34 @@
+[2026-06-15T06:19:21.058Z] job started: type=scene, scene=1
+[2026-06-15T06:19:21.060Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-1-a7f9b6e6-8c5d-41c3-8b12-d0ebaa6c5167.json
+[2026-06-15T06:19:21.979Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-15T06:19:27.037Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-15T06:19:27.395Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781504361273_scene_001\02_opened.png
+[2026-06-15T06:19:27.815Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-15T06:19:30.525Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781504361273_scene_001\04_after_D_n_m_i.png
+[2026-06-15T06:19:30.710Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-15T06:19:30.736Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-15T06:19:30.737Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-15T06:19:33.515Z] worker: [BOT] ☁️ Đã đẩy 5 file lên hệ thống ngầm.
+[2026-06-15T06:19:33.516Z] worker: [BOT] ⏳ Đang chờ 30 giây để đảm bảo tất cả ảnh được tải lên thành công...
+[2026-06-15T06:20:03.543Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-15T06:20:05.961Z] worker: [BOT] ✅ Đã thêm ref_000.png vào câu lệnh.
+[2026-06-15T06:20:09.367Z] worker: [BOT] ✅ Đã thêm ref_001.png vào câu lệnh.
+[2026-06-15T06:20:12.780Z] worker: [BOT] ✅ Đã thêm ref_002.png vào câu lệnh.
+[2026-06-15T06:20:16.171Z] worker: [BOT] ✅ Đã thêm ref_003.png vào câu lệnh.
+[2026-06-15T06:20:22.590Z] worker: [BOT] ⚠️ Không tìm thấy nút 'Thêm vào câu lệnh' cho ref_004.png.
+[2026-06-15T06:20:22.591Z] worker: [BOT] ✅ Đính kèm tất cả file thành công!
+[2026-06-15T06:20:30.352Z] worker: Progress: filled prompt
+[2026-06-15T06:20:30.370Z] worker: Progress: clicked composer submit button
+[2026-06-15T06:20:33.542Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781504361273_scene_001\19_after_submit_image.png
+[2026-06-15T06:20:33.684Z] worker: Progress: found generated image
+[2026-06-15T06:20:41.734Z] worker: Progress: saved image to D:\workspace\Python\App\make film\ai-film-tool\backend\generated\FILM_scene_001_image_1781504370710.png
+[2026-06-15T06:20:41.735Z] worker: [BOT] 🎬 [2/2] Bắt đầu quá trình tạo Video từ Ảnh vừa tạo...
+[2026-06-15T06:20:41.735Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho video...
+[2026-06-15T06:20:44.928Z] worker: [BOT] ☁️ Đã đẩy 1 file lên hệ thống ngầm.
+[2026-06-15T06:20:44.929Z] worker: [BOT] ⏳ Đang chờ 30 giây để đảm bảo tất cả ảnh được tải lên thành công...
+[2026-06-15T06:21:14.944Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 1 ảnh vào ô chat...
+[2026-06-15T06:21:20.380Z] worker: [BOT] ⚠️ Không tìm thấy nút 'Thêm vào câu lệnh' cho FILM_scene_001_image_1781504370710.png.
+[2026-06-15T06:21:20.381Z] worker: [BOT] ✅ Đính kèm tất cả file thành công!
+[2026-06-15T06:21:29.547Z] worker: Progress: filled prompt
+[2026-06-15T06:21:29.576Z] worker: Progress: clicked composer submit button
+[2026-06-15T06:21:32.818Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781504361273_scene_001\31_after_submit_video.png

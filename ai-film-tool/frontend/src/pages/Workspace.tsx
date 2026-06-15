@@ -142,7 +142,7 @@ function LoadFlowDropdown({ onClose }: { onClose: () => void }) {
 export default function Workspace() {
   const { 
     concurrency, setConcurrency, filePrefix, setFilePrefix, 
-    isRunning, runPipeline, pipelineProgress, nodes 
+    isRunning, runPipeline, pipelineProgress, pipelineLogs, nodes 
   } = useStore();
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [showLoadFlow, setShowLoadFlow] = useState(false);
@@ -367,6 +367,22 @@ export default function Workspace() {
           </ReactFlowProvider>
         </main>
       </div>
+
+      {pipelineLogs.length > 0 && (
+        <div className="absolute bottom-4 right-4 z-40 flex max-h-80 w-[520px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border border-border bg-card/95 shadow-2xl backdrop-blur">
+          <div className="flex items-center justify-between border-b border-border px-3 py-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">Pipeline log</span>
+            <span className="text-[10px] text-muted-foreground">{pipelineLogs.length} lines</span>
+          </div>
+          <div className="flex-1 space-y-1 overflow-y-auto p-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+            {pipelineLogs.slice(-120).map((line, index) => (
+              <div key={`${index}-${line}`} className="whitespace-pre-wrap break-words">
+                {line}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {showBatchModal && <BatchModal onClose={() => setShowBatchModal(false)} />}
       {showChromeManager && <ChromeManager onClose={() => setShowChromeManager(false)} />}
