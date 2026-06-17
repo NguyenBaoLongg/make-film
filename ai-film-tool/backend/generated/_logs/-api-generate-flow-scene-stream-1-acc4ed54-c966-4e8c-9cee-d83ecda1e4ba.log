@@ -1,0 +1,61 @@
+[2026-06-17T02:31:41.117Z] job started: type=scene, scene=1
+[2026-06-17T02:31:41.119Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-acc4ed54-c966-4e8c-9cee-d83ecda1e4ba.json
+[2026-06-17T02:31:44.817Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T02:31:50.519Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T02:31:50.838Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781663501675_scene_001\02_opened.png
+[2026-06-17T02:31:51.691Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T02:31:54.416Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781663501675_scene_001\04_after_D_n_m_i.png
+[2026-06-17T02:31:54.754Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T02:31:54.804Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T02:31:54.806Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T02:32:02.491Z] worker: [BOT] ☁️ Đã đẩy 5 file lên hệ thống ngầm.
+[2026-06-17T02:32:02.492Z] worker: [BOT] ⏳ Đang chờ 30 giây để đảm bảo tất cả ảnh được tải lên thành công...
+[2026-06-17T02:32:32.510Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-17T02:32:35.072Z] worker: [BOT] ✅ Đã thêm ref_000.png vào câu lệnh.
+[2026-06-17T02:32:38.608Z] worker: [BOT] ✅ Đã thêm ref_001.png vào câu lệnh.
+[2026-06-17T02:32:42.104Z] worker: [BOT] ✅ Đã thêm ref_002.png vào câu lệnh.
+[2026-06-17T02:32:45.546Z] worker: [BOT] ✅ Đã thêm ref_003.png vào câu lệnh.
+[2026-06-17T02:32:51.991Z] worker: [BOT] ⚠️ Không tìm thấy nút 'Thêm vào câu lệnh' cho ref_004.png.
+[2026-06-17T02:32:51.991Z] worker: [BOT] ✅ Đính kèm tất cả file thành công!
+[2026-06-17T02:32:52.895Z] worker: Progress: filled prompt
+[2026-06-17T02:32:54.488Z] worker: Progress: submitted prompt with keyboard
+[2026-06-17T02:32:57.497Z] worker: [BOT] ⏳ Đã Submit, đang chờ Network trả về image (tối đa 10 phút)...
+[2026-06-17T02:33:18.132Z] worker: [BOT] ✅ Đã bắt được file image từ Network: https://flow-content.google/image/d2ed7473-3078-48ad-b51b-dd011e653089?Expires=1781685236&KeyName=labs-flow-prod-cdn-key&Signature=NgD49pRY-WTbBhu4v8RDHVjrWSw
+[2026-06-17T02:33:18.465Z] worker: [BOT] 💾 Đã lưu thành công vào: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\FILM_scene_001_image_1781663514752.png
+[2026-06-17T02:33:18.465Z] event: image_done {"scene_index":1,"result_url":"http://localhost:3000/generated/FILM_scene_001_image_1781663514752.png","local_path":"D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\FILM_scene_001_image_1781663514752.png"}
+[2026-06-17T02:33:18.466Z] worker: [BOT] 🎬 [2/2] Bắt đầu quá trình tạo Video từ Ảnh vừa tạo...
+[2026-06-17T02:33:18.467Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho video...
+[2026-06-17T02:33:21.559Z] worker: [BOT] ☁️ Đã đẩy 1 file lên hệ thống ngầm.
+[2026-06-17T02:33:21.559Z] worker: [BOT] ⏳ Đang chờ 30 giây để đảm bảo tất cả ảnh được tải lên thành công...
+[2026-06-17T02:33:51.573Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 1 ảnh vào ô chat...
+[2026-06-17T02:33:51.584Z] worker: [BOT] ⚠️ Không tìm thấy nút [+], thử các nút cũ...
+[2026-06-17T02:33:52.651Z] worker: [BOT] ❌ Lỗi: Không tìm thấy ảnh FILM_scene_001_image_1781663514752.png trong thư viện sau 30s. Bỏ qua.
+[2026-06-17T02:33:52.652Z] worker: [BOT] ✅ Đính kèm tất cả file thành công!
+[2026-06-17T02:33:58.145Z] worker: [BOT] ⚠️ fill() thất bại, thử gõ tuần tự... (Locator.fill: Timeout 5000ms exceeded.
+[2026-06-17T02:33:58.145Z] worker: Call log:
+[2026-06-17T02:33:58.146Z] worker:   - waiting for locator("div[role=\"textbox\"][data-slate-editor=\"true\"]").first
+[2026-06-17T02:33:58.147Z] worker:     - locator resolved to <div zindex="-1" role="textbox" spellcheck="false" aria-multiline="true" contenteditable="true" data-slate-node="value" data-slate-editor="true" class="sc-a8ba1f43-0 djaQmW sc-26b30722-6 jwWpiy">…</div>
+[2026-06-17T02:33:58.148Z] worker:     - fill("Cảnh 1: Bobo vừa đi vừa tung quả táo lên trời, camera tracking nhẹ từ trái sang phải. Bobo cười tự tin và nói: “Xem siêu heo biểu diễn đây!”. Quả táo rơi trúng đầu Bobo, Bobo loạng choạng lùi lại và va vào chiếc bình hoa. Bình hoa rung mạnh rồi rơi xuống vỡ tan. Bobo hét lên: “Ối mẹ ơi!”. Thêm hiệu ứng âm thanh vui nhộn: bộp, loạng choạng, rầm.")
+[2026-06-17T02:33:58.148Z] worker:   - attempting fill action
+[2026-06-17T02:33:58.149Z] worker:     2 × waiting for element to be visible, enabled and editable
+[2026-06-17T02:33:58.150Z] worker:       - element is not visible
+[2026-06-17T02:33:58.150Z] worker:     - retrying fill action
+[2026-06-17T02:33:58.151Z] worker:     - waiting 20ms
+[2026-06-17T02:33:58.152Z] worker:     2 × waiting for element to be visible, enabled and editable
+[2026-06-17T02:33:58.152Z] worker:       - element is not visible
+[2026-06-17T02:33:58.153Z] worker:     - retrying fill action
+[2026-06-17T02:33:58.154Z] worker:       - waiting 100ms
+[2026-06-17T02:33:58.155Z] worker:     10 × waiting for element to be visible, enabled and editable
+[2026-06-17T02:33:58.155Z] worker:        - element is not visible
+[2026-06-17T02:33:58.156Z] worker:      - retrying fill action
+[2026-06-17T02:33:58.157Z] worker:        - waiting 500ms
+[2026-06-17T02:33:58.157Z] worker: )
+[2026-06-17T02:33:58.410Z] worker: [BOT] ⚠️ Lỗi khi gõ prompt: Locator.click: Element is not visible
+[2026-06-17T02:33:58.410Z] worker: Call log:
+[2026-06-17T02:33:58.411Z] worker:   - waiting for locator("div[role=\"textbox\"][data-slate-editor=\"true\"]").first
+[2026-06-17T02:33:58.411Z] worker:     - locator resolved to <div zindex="-1" role="textbox" spellcheck="false" aria-multiline="true" contenteditable="true" data-slate-node="value" data-slate-editor="true" class="sc-a8ba1f43-0 djaQmW sc-26b30722-6 jwWpiy">…</div>
+[2026-06-17T02:33:58.411Z] worker:   - attempting click action
+[2026-06-17T02:33:58.412Z] worker:     - scrolling into view if needed
+[2026-06-17T02:33:58.413Z] worker: Progress: filled prompt
+[2026-06-17T02:33:58.479Z] worker: Progress: clicked composer submit button
+[2026-06-17T02:34:01.483Z] worker: [BOT] ⏳ Đã Submit, đang chờ Network trả về video (tối đa 30 phút)...

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Response } from 'express';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -45,6 +45,15 @@ interface ProcessResult {
   stderr: string;
 }
 
+interface WorkerEvent {
+  type: string;
+  data: Record<string, unknown>;
+}
+
+type WorkerEventHandler = (event: WorkerEvent) => void;
+
+const workerEventPrefix = 'FLOW_EVENT ';
+
 function ensureRuntimeDirs() {
   fs.mkdirSync(generatedDir, { recursive: true });
   fs.mkdirSync(jobsDir, { recursive: true });
@@ -75,6 +84,35 @@ function appendWorkerLog(runId: string, message: string) {
   ensureRuntimeDirs();
   const line = `[${new Date().toISOString()}] ${message.replace(/\r?\n/g, '\n')}\n`;
   fs.appendFileSync(logPathForRunId(runId), line, 'utf8');
+}
+
+function writeSse(res: Response, event: string, data: unknown) {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${JSON.stringify(data)}\n\n`);
+}
+
+function startSse(res: Response) {
+  res.status(200);
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+}
+
+function parseWorkerEvent(line: string): WorkerEvent | null {
+  if (!line.startsWith(workerEventPrefix)) return null;
+
+  try {
+    const payload = JSON.parse(line.slice(workerEventPrefix.length));
+    const type = typeof payload.event === 'string' ? payload.event : 'message';
+    const data = payload.data && typeof payload.data === 'object' ? payload.data : {};
+    return { type, data };
+  } catch {
+    return {
+      type: 'log',
+      data: { message: `invalid worker event: ${line}` },
+    };
+  }
 }
 
 function getPythonCandidates(): PythonCandidate[] {
@@ -140,13 +178,17 @@ function parseWorkerJson(stdout: string) {
   return JSON.parse(trimmed.substring(jsonStart, jsonEnd + 1));
 }
 
-async function runFlowWorker(payload: FlowJobPayload) {
+async function runFlowWorker(payload: FlowJobPayload, onEvent?: WorkerEventHandler) {
   ensureRuntimeDirs();
   const jobId = safeRunId(payload.run_id || crypto.randomUUID());
   const jobPath = path.join(jobsDir, `${jobId}.json`);
   fs.writeFileSync(jobPath, JSON.stringify(payload, null, 2), 'utf8');
   fs.writeFileSync(logPathForRunId(jobId), '', 'utf8');
   appendWorkerLog(jobId, `job started: type=${payload.type}, scene=${payload.scene_index || 1}`);
+  onEvent?.({
+    type: 'log',
+    data: { runId: jobId, message: `job started: type=${payload.type}, scene=${payload.scene_index || 1}` },
+  });
 
   let lastError = '';
 
@@ -154,24 +196,62 @@ async function runFlowWorker(payload: FlowJobPayload) {
     const args = [...candidate.argsPrefix, flowWorkerScript, '--job', jobPath];
     console.log(`[Flow Worker] ${candidate.command} ${args.join(' ')}`);
     appendWorkerLog(jobId, `spawn: ${candidate.command} ${args.join(' ')}`);
+    onEvent?.({
+      type: 'log',
+      data: { runId: jobId, message: `spawn: ${candidate.command} ${args.join(' ')}` },
+    });
+
+    const lineBuffers: Record<'stdout' | 'stderr', string> = { stdout: '', stderr: '' };
+    const handleWorkerLine = (stream: 'stdout' | 'stderr', line: string) => {
+      const workerEvent = parseWorkerEvent(line);
+      if (workerEvent) {
+        appendWorkerLog(jobId, `event: ${workerEvent.type} ${JSON.stringify(workerEvent.data)}`);
+        onEvent?.(workerEvent);
+        return;
+      }
+
+      const label = stream === 'stderr' ? 'worker' : 'result';
+      if (line.startsWith('[BOT]') || line.startsWith('Progress:')) {
+        console.log(line);
+      } else {
+        // Keep debug logs out of the main console output to keep it clean, but save to file
+      }
+      appendWorkerLog(jobId, `${label}: ${line}`);
+      onEvent?.({
+        type: 'log',
+        data: { runId: jobId, stream, message: `${label}: ${line}` },
+      });
+    };
+
+    const handleWorkerChunk = (stream: 'stdout' | 'stderr', text: string) => {
+      lineBuffers[stream] += text;
+      const lines = lineBuffers[stream].split(/\r?\n/);
+      lineBuffers[stream] = lines.pop() || '';
+      for (const line of lines.filter(Boolean)) {
+        handleWorkerLine(stream, line);
+      }
+    };
+
+    const flushWorkerLines = () => {
+      (['stdout', 'stderr'] as const).forEach((stream) => {
+        const line = lineBuffers[stream].trim();
+        if (line) handleWorkerLine(stream, line);
+        lineBuffers[stream] = '';
+      });
+    };
 
     try {
-      const result = await runProcess(candidate.command, args, (stream, text) => {
-        const label = stream === 'stderr' ? 'worker' : 'result';
-        for (const line of text.split(/\r?\n/).filter(Boolean)) {
-          if (line.startsWith('[BOT]') || line.startsWith('Progress:')) {
-            console.log(line);
-          } else {
-            // Keep debug logs out of the main console output to keep it clean, but save to file
-          }
-          appendWorkerLog(jobId, `${label}: ${line}`);
-        }
-      });
+      const result = await runProcess(candidate.command, args, handleWorkerChunk);
+      flushWorkerLines();
       const parsed = result.stdout.trim() ? parseWorkerJson(result.stdout) : null;
       if (result.code !== 0) {
         lastError = parsed?.message || result.stderr || result.stdout || `Python exited with code ${result.code}`;
         console.error(`[Flow Worker] failed with ${candidate.command}: ${lastError}`);
         appendWorkerLog(jobId, `failed: ${lastError}`);
+        onEvent?.({
+          type: 'log',
+          data: { runId: jobId, message: `failed: ${lastError}` },
+        });
         continue;
       }
 
@@ -182,15 +262,28 @@ async function runFlowWorker(payload: FlowJobPayload) {
         throw new Error(parsed.message || 'Flow worker returned error');
       }
       appendWorkerLog(jobId, 'job completed successfully');
+      onEvent?.({
+        type: 'log',
+        data: { runId: jobId, message: 'job completed successfully' },
+      });
       return parsed;
     } catch (error: any) {
+      flushWorkerLines();
       lastError = error?.message || String(error);
       console.error(`[Flow Worker] failed with ${candidate.command}: ${lastError}`);
       appendWorkerLog(jobId, `error: ${lastError}`);
+      onEvent?.({
+        type: 'log',
+        data: { runId: jobId, message: `error: ${lastError}` },
+      });
     }
   }
 
   appendWorkerLog(jobId, `job failed: ${lastError}`);
+  onEvent?.({
+    type: 'log',
+    data: { runId: jobId, message: `job failed: ${lastError}` },
+  });
   throw new Error(`Could not run Python Flow worker. ${lastError}`);
 }
 
@@ -360,6 +453,67 @@ router.post('/flow-video', async (req, res) => {
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/flow-scene/stream', async (req, res) => {
+  const {
+    imagePrompt,
+    videoPrompt,
+    profile = 'default',
+    referenceImages = [],
+    options = {},
+    filePrefix = 'film',
+    sceneIndex = 1,
+    projectUrl = '',
+    createProject = false,
+    runId = '',
+  } = req.body;
+
+  if (!imagePrompt || typeof imagePrompt !== 'string') {
+    return res.status(400).json({ error: 'imagePrompt is required' });
+  }
+
+  if (!videoPrompt || typeof videoPrompt !== 'string') {
+    return res.status(400).json({ error: 'videoPrompt is required' });
+  }
+
+  startSse(res);
+  let clientClosed = false;
+  res.on('close', () => {
+    clientClosed = true;
+  });
+
+  const send = (event: string, data: unknown) => {
+    if (!clientClosed && !res.writableEnded) {
+      writeSse(res, event, data);
+    }
+  };
+
+  try {
+    const result = await runFlowWorker({
+      type: 'scene',
+      image_prompt: imagePrompt,
+      video_prompt: videoPrompt,
+      profile,
+      flow_url: config.googleFlowUrl,
+      headless: config.playwrightHeadless,
+      output_dir: generatedDir,
+      public_base_url: `${config.publicApiUrl.replace(/\/$/, '')}/generated`,
+      file_prefix: sanitizeFilePart(filePrefix),
+      scene_index: Number(sceneIndex) || 1,
+      reference_images: Array.isArray(referenceImages) ? referenceImages : [],
+      project_url: typeof projectUrl === 'string' ? projectUrl : '',
+      create_project: Boolean(createProject),
+      run_id: typeof runId === 'string' ? runId : '',
+      options,
+    }, (event) => send(event.type, event.data));
+
+    send('done', result);
+  } catch (error: any) {
+    send('error', { error: error.message || String(error) });
+  } finally {
+    if (!res.writableEnded) res.end();
   }
 });
 

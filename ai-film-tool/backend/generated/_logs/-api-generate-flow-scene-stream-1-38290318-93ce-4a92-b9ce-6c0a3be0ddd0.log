@@ -1,0 +1,65 @@
+[2026-06-17T04:12:39.792Z] job started: type=scene, scene=1
+[2026-06-17T04:12:39.793Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-38290318-93ce-4a92-b9ce-6c0a3be0ddd0.json
+[2026-06-17T04:12:40.574Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T04:12:45.514Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T04:12:45.898Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669560001_scene_001\02_opened.png
+[2026-06-17T04:12:46.438Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T04:12:49.845Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669560001_scene_001\04_after_D_n_m_i.png
+[2026-06-17T04:12:50.153Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T04:12:50.185Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T04:12:50.186Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T04:13:17.593Z] worker: [BOT] ☁️ Đã đẩy 5 file lên thư viện cùng lúc (Bulk Upload).
+[2026-06-17T04:13:17.595Z] worker: [BOT] ⏳ Đang chờ 25 giây để hệ thống upload xong toàn bộ ảnh...
+[2026-06-17T04:13:42.612Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-17T04:13:46.158Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_000.png vào câu lệnh.
+[2026-06-17T04:13:50.629Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_001.png vào câu lệnh.
+[2026-06-17T04:13:55.049Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_002.png vào câu lệnh.
+[2026-06-17T04:13:59.524Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_003.png vào câu lệnh.
+[2026-06-17T04:14:03.747Z] worker: [BOT] ⚠️ Không tìm thấy nút 'Thêm vào câu lệnh' cho ref_004.png.
+[2026-06-17T04:14:03.864Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669560001_scene_001\16_upload_attach_failed.png
+[2026-06-17T04:14:04.070Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T04:14:04.071Z] result: {"status": "error", "message": "[BOT] Failed to attach 1/5 required image file(s) to the Flow composer.. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781669560001_scene_001"}
+[2026-06-17T04:14:04.186Z] failed: [BOT] Failed to attach 1/5 required image file(s) to the Flow composer.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669560001_scene_001
+[2026-06-17T04:14:04.186Z] spawn: python D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-38290318-93ce-4a92-b9ce-6c0a3be0ddd0.json
+[2026-06-17T04:14:05.131Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T04:14:10.172Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T04:14:11.606Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669644453_scene_001\02_opened.png
+[2026-06-17T04:14:12.185Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T04:14:16.986Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669644453_scene_001\04_after_D_n_m_i.png
+[2026-06-17T04:14:17.278Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T04:14:17.335Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T04:14:17.336Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T04:14:22.182Z] worker: [BOT] ☁️ Đã đẩy 5 file lên thư viện cùng lúc (Bulk Upload).
+[2026-06-17T04:14:22.183Z] worker: [BOT] ⏳ Đang chờ 25 giây để hệ thống upload xong toàn bộ ảnh...
+[2026-06-17T04:14:47.198Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-17T04:14:49.090Z] worker: [BOT] ❌ Lỗi: Không tìm thấy ảnh ref_000.png trong thư viện. Có thể upload bị sót hoặc lỗi mạng.
+[2026-06-17T04:14:57.615Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_001.png vào câu lệnh.
+[2026-06-17T04:15:02.112Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_002.png vào câu lệnh.
+[2026-06-17T04:15:06.594Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_003.png vào câu lệnh.
+[2026-06-17T04:15:10.843Z] worker: [BOT] ⚠️ Không tìm thấy nút 'Thêm vào câu lệnh' cho ref_004.png.
+[2026-06-17T04:15:11.049Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669644453_scene_001\16_upload_attach_failed.png
+[2026-06-17T04:15:11.327Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T04:15:11.327Z] result: {"status": "error", "message": "[BOT] Failed to attach 2/5 required image file(s) to the Flow composer.. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781669644453_scene_001"}
+[2026-06-17T04:15:11.361Z] failed: [BOT] Failed to attach 2/5 required image file(s) to the Flow composer.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669644453_scene_001
+[2026-06-17T04:15:11.361Z] spawn: py -3 D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-38290318-93ce-4a92-b9ce-6c0a3be0ddd0.json
+[2026-06-17T04:15:12.077Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T04:15:17.013Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T04:15:17.389Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669711601_scene_001\02_opened.png
+[2026-06-17T04:15:18.159Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T04:15:21.601Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669711601_scene_001\04_after_D_n_m_i.png
+[2026-06-17T04:15:21.845Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T04:15:21.902Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T04:15:21.903Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T04:15:28.393Z] worker: [BOT] ☁️ Đã đẩy 5 file lên thư viện cùng lúc (Bulk Upload).
+[2026-06-17T04:15:28.395Z] worker: [BOT] ⏳ Đang chờ 25 giây để hệ thống upload xong toàn bộ ảnh...
+[2026-06-17T04:15:53.415Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-17T04:15:55.339Z] worker: [BOT] ❌ Lỗi: Không tìm thấy ảnh ref_000.png trong thư viện. Có thể upload bị sót hoặc lỗi mạng.
+[2026-06-17T04:16:03.874Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_001.png vào câu lệnh.
+[2026-06-17T04:16:08.390Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_002.png vào câu lệnh.
+[2026-06-17T04:16:12.891Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_003.png vào câu lệnh.
+[2026-06-17T04:16:17.185Z] worker: [BOT] ⚠️ Không tìm thấy nút 'Thêm vào câu lệnh' cho ref_004.png.
+[2026-06-17T04:16:17.429Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669711601_scene_001\16_upload_attach_failed.png
+[2026-06-17T04:16:17.653Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T04:16:17.653Z] result: {"status": "error", "message": "[BOT] Failed to attach 2/5 required image file(s) to the Flow composer.. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781669711601_scene_001"}
+[2026-06-17T04:16:17.691Z] failed: [BOT] Failed to attach 2/5 required image file(s) to the Flow composer.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669711601_scene_001
+[2026-06-17T04:16:17.692Z] job failed: [BOT] Failed to attach 2/5 required image file(s) to the Flow composer.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781669711601_scene_001

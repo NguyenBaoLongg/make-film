@@ -4,6 +4,11 @@ echo      Khỏi đọng AI Film Studio Pro
 echo =========================================
 
 echo.
+echo Dang don dep cac tien trinh cu (neu co)...
+FOR /F "tokens=5" %%a IN ('netstat -aon ^| find "LISTENING" ^| find ":3000"') DO taskkill /F /PID %%a 2>nul
+FOR /F "tokens=5" %%a IN ('netstat -aon ^| find "LISTENING" ^| find ":5173"') DO taskkill /F /PID %%a 2>nul
+echo Da don dep xong!
+echo.
 echo Đang khỏi đọng Backend...
 start "AI Film Studio - Backend" cmd /k "cd /d "%~dp0\backend" && npm run dev"
 

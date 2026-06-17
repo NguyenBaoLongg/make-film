@@ -66,6 +66,12 @@ interface GenerateResponse {
   error?: string;
 }
 
+interface FlowSceneStreamCallbacks {
+  image_done?: (result: GenerateResponse) => void;
+  video_done?: (result: GenerateResponse) => void;
+  scene_done?: (result: GenerateResponse) => void;
+}
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 type LogFn = (message: string) => void;
@@ -171,6 +177,20 @@ function makeRunId(path: string, sceneIndex?: number) {
   return `${path.replace(/[^a-z0-9]+/gi, '-')}-${sceneIndex || 0}-${suffix}`;
 }
 
+function normalizeGenerateResponse(data: Record<string, unknown>): GenerateResponse {
+  return {
+    status: typeof data.status === 'string' ? data.status : 'success',
+    result_url: typeof data.result_url === 'string' ? data.result_url : '',
+    local_path: typeof data.local_path === 'string' ? data.local_path : undefined,
+    project_url: typeof data.project_url === 'string' ? data.project_url : undefined,
+    image_result_url: typeof data.image_result_url === 'string' ? data.image_result_url : undefined,
+    image_local_path: typeof data.image_local_path === 'string' ? data.image_local_path : undefined,
+    video_result_url: typeof data.video_result_url === 'string' ? data.video_result_url : undefined,
+    video_local_path: typeof data.video_local_path === 'string' ? data.video_local_path : undefined,
+    error: typeof data.error === 'string' ? data.error : undefined,
+  };
+}
+
 async function apiPostWithLog<T>(
   path: string,
   body: Record<string, unknown>,
@@ -234,6 +254,107 @@ async function apiPostWithLog<T>(
     window.clearInterval(interval);
     await pollLogs();
   }
+}
+
+async function apiPostStream<T>(
+  path: string,
+  body: Record<string, unknown>,
+  onLog: LogFn,
+  callbacks: FlowSceneStreamCallbacks,
+  sceneIndex?: number,
+): Promise<T> {
+  const session = await supabase.auth.getSession();
+  const token = session.data.session?.access_token;
+  if (!token) throw new Error('No auth token. Please login again.');
+
+  const runId = makeRunId(path, sceneIndex);
+  onLog(`[frontend] stream start ${path} runId=${runId}`);
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ ...body, runId }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    const payload = text ? JSON.parse(text) : {};
+    throw new Error(payload.error || payload.message || response.statusText);
+  }
+
+  if (!response.body) {
+    throw new Error('Streaming response is not available in this browser.');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let finalPayload: T | undefined;
+  let streamError: Error | undefined;
+
+  const dispatchEvent = (raw: string) => {
+    if (!raw.trim()) return;
+
+    let event = 'message';
+    const dataLines: string[] = [];
+
+    for (const line of raw.split('\n')) {
+      if (line.startsWith('event:')) {
+        event = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        dataLines.push(line.slice(5).trimStart());
+      }
+    }
+
+    const dataText = dataLines.join('\n');
+    const rawPayload = dataText ? JSON.parse(dataText) as Record<string, unknown> : {};
+    const payload = normalizeGenerateResponse(rawPayload);
+
+    if (event === 'log') {
+      const message = typeof rawPayload.message === 'string'
+        ? rawPayload.message
+        : JSON.stringify(rawPayload);
+      onLog(message);
+      return;
+    }
+
+    if (event === 'error') {
+      streamError = new Error(payload.error || 'Stream generation failed.');
+      return;
+    }
+
+    if (event === 'image_done') callbacks.image_done?.(payload);
+    if (event === 'video_done') callbacks.video_done?.(payload);
+    if (event === 'scene_done') callbacks.scene_done?.(payload);
+    if (event === 'done') finalPayload = payload as T;
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+    let separatorIndex = buffer.indexOf('\n\n');
+    while (separatorIndex !== -1) {
+      const raw = buffer.slice(0, separatorIndex);
+      buffer = buffer.slice(separatorIndex + 2);
+      dispatchEvent(raw);
+      separatorIndex = buffer.indexOf('\n\n');
+    }
+  }
+
+  buffer += decoder.decode().replace(/\r\n/g, '\n');
+  if (buffer.trim()) dispatchEvent(buffer);
+
+  if (streamError) throw streamError;
+  if (!finalPayload) throw new Error('Stream finished without a final result.');
+
+  onLog(`[frontend] stream done ${path}`);
+  return finalPayload;
 }
 
 async function createFlowImage(params: {
@@ -300,8 +421,11 @@ async function createFlowScene(params: {
   projectUrl?: string;
   createProject?: boolean;
   onLog: LogFn;
+  onImageDone?: (result: GenerateResponse) => void;
+  onVideoDone?: (result: GenerateResponse) => void;
+  onSceneDone?: (result: GenerateResponse) => void;
 }) {
-  return apiPostWithLog<GenerateResponse>('/api/generate/flow-scene', {
+  return apiPostStream<GenerateResponse>('/api/generate/flow-scene/stream', {
     imagePrompt: params.imagePrompt,
     videoPrompt: params.videoPrompt,
     referenceImages: params.referenceImages,
@@ -321,7 +445,11 @@ async function createFlowScene(params: {
       duration: nodeData(params.videoNode).duration,
       voiceover: nodeData(params.videoNode).voiceover,
     },
-  }, params.onLog, params.sceneIndex);
+  }, params.onLog, {
+    image_done: params.onImageDone,
+    video_done: params.onVideoDone,
+    scene_done: params.onSceneDone,
+  }, params.sceneIndex);
 }
 
 async function concatVideos(videoUrls: string[], filePrefix: string) {
@@ -468,6 +596,44 @@ export const useStore = create<AppState>((set, get) => ({
           const videoPrompt = dataString(videoNode, 'motionPrompt', `Scene ${sceneIndex} motion`);
           get().addPipelineLog(`Scene ${sceneIndex}: image+video will run in one Chrome session.`);
 
+          let imageMarkedDone = false;
+          let videoMarkedDone = false;
+
+          const applySceneImage = (result: GenerateResponse) => {
+            if (imageMarkedDone) return;
+
+            const imageUrl = result.image_result_url || result.result_url;
+            if (!imageUrl) return;
+
+            get().updateNodeData(imageNode.id, {
+              resultUrl: imageUrl,
+              localPath: result.image_local_path || result.local_path,
+            });
+            get().updateNodeStatus(imageNode.id, 'completed');
+            get().addPipelineLog(`Scene ${sceneIndex}: image completed.`);
+            markStepDone();
+            imageMarkedDone = true;
+
+            get().updateNodeStatus(videoNode.id, 'processing');
+            get().addPipelineLog(`Scene ${sceneIndex}: start video node ${videoNode.id}.`);
+          };
+
+          const applySceneVideo = (result: GenerateResponse) => {
+            if (videoMarkedDone) return;
+
+            const videoUrl = result.video_result_url || result.result_url;
+            if (!videoUrl) return;
+
+            get().updateNodeData(videoNode.id, {
+              resultUrl: videoUrl,
+              localPath: result.video_local_path || result.local_path,
+            });
+            get().updateNodeStatus(videoNode.id, 'completed');
+            get().addPipelineLog(`Scene ${sceneIndex}: video completed.`);
+            markStepDone();
+            videoMarkedDone = true;
+          };
+
           const sceneResult = await createFlowScene({
             imagePrompt,
             videoPrompt,
@@ -479,37 +645,32 @@ export const useStore = create<AppState>((set, get) => ({
             projectUrl: flowProjectUrl,
             createProject: shouldCreateProject,
             onLog: get().addPipelineLog,
+            onImageDone: applySceneImage,
+            onVideoDone: applySceneVideo,
+            onSceneDone: () => get().addPipelineLog(`Scene ${sceneIndex}: scene completed.`),
           });
 
           flowProjectUrl = sceneResult.project_url || flowProjectUrl;
           shouldCreateProject = false;
 
-          const imageUrl = sceneResult.image_result_url || sceneResult.result_url;
-          if (!imageUrl) {
+          applySceneImage({
+            ...sceneResult,
+            result_url: sceneResult.image_result_url || sceneResult.result_url,
+            local_path: sceneResult.image_local_path || sceneResult.local_path,
+          });
+          if (!imageMarkedDone) {
             throw new Error(`Image scene ${sceneIndex} finished without a result URL`);
           }
 
-          get().updateNodeData(imageNode.id, {
-            resultUrl: imageUrl,
-            localPath: sceneResult.image_local_path,
+          applySceneVideo({
+            ...sceneResult,
+            result_url: sceneResult.video_result_url || sceneResult.result_url,
+            local_path: sceneResult.video_local_path || sceneResult.local_path,
           });
-          get().updateNodeStatus(imageNode.id, 'completed');
-          get().addPipelineLog(`Scene ${sceneIndex}: image completed.`);
-          markStepDone();
-
-          get().updateNodeStatus(videoNode.id, 'processing');
-          const videoUrl = sceneResult.video_result_url || sceneResult.result_url;
-          if (!videoUrl) {
+          if (!videoMarkedDone) {
             throw new Error(`Video scene ${sceneIndex} finished without a result URL`);
           }
 
-          get().updateNodeData(videoNode.id, {
-            resultUrl: videoUrl,
-            localPath: sceneResult.video_local_path || sceneResult.local_path,
-          });
-          get().updateNodeStatus(videoNode.id, 'completed');
-          get().addPipelineLog(`Scene ${sceneIndex}: video completed.`);
-          markStepDone();
           continue;
         }
 

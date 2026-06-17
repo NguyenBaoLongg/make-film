@@ -1,0 +1,70 @@
+[2026-06-17T02:53:53.460Z] job started: type=scene, scene=1
+[2026-06-17T02:53:53.461Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-800ec3f8-61d1-4362-a209-0554c1e81744.json
+[2026-06-17T02:53:54.182Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T02:53:59.180Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T02:53:59.510Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781664833658_scene_001\02_opened.png
+[2026-06-17T02:54:00.007Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T02:54:02.577Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781664833658_scene_001\04_after_D_n_m_i.png
+[2026-06-17T02:54:02.795Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T02:54:02.825Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T02:54:02.826Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T02:54:34.597Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T02:54:34.599Z] result: {"status": "error", "message": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"button[aria-haspopup=\\\"menu\\\"]\").nth(4)\n    - locator resolved to <button type=\"button\" id=\"radix-:r1u:\" data-state=\"closed\" aria-haspopup=\"menu\" aria-expanded=\"false\" class=\"sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-362690a9-1 ewGlDn famhRe fHpFkO\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"sc-ffc41c6d-1 eTHrII\">…</div> from <div role=\"dialog\" tabindex=\"-1\" id=\"radix-:Ritm:\" data-state=\"open\" class=\"sc-1c85c79d-0 deKjzW\" aria-labelledby=\"radix-:RitmH1:\" aria-describedby=\"radix-:RitmH2:\">…</div> subtree intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"sc-ffc41c6d-1 eTHrII\">…</div> from <div role=\"dialog\" tabindex=\"-1\" id=\"radix-:Ritm:\" data-state=\"open\" class=\"sc-1c85c79d-0 deKjzW\" aria-labelledby=\"radix-:RitmH1:\" aria-describedby=\"radix-:RitmH2:\">…</div> subtree intercepts pointer events\n    - retrying click action\n      - waiting 100ms\n    55 × waiting for element to be visible, enabled and stable\n       - element is visible, enabled and stable\n       - scrolling into view if needed\n       - done scrolling\n       - <div class=\"sc-ffc41c6d-1 eTHrII\">…</div> from <div role=\"dialog\" tabindex=\"-1\" id=\"radix-:Ritm:\" data-state=\"open\" class=\"sc-1c85c79d-0 deKjzW\" aria-labelledby=\"radix-:RitmH1:\" aria-describedby=\"radix-:RitmH2:\">…</div> subtree intercepts pointer events\n     - retrying click action\n       - waiting 500ms\n    - waiting for element to be visible, enabled and stable\n    - element is visible, enabled and stable\n    - scrolling into view if needed\n. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781664833658_scene_001"}
+[2026-06-17T02:54:34.645Z] failed: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("button[aria-haspopup=\"menu\"]").nth(4)
+    - locator resolved to <button type="button" id="radix-:r1u:" data-state="closed" aria-haspopup="menu" aria-expanded="false" class="sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-362690a9-1 ewGlDn famhRe fHpFkO">…</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div class="sc-ffc41c6d-1 eTHrII">…</div> from <div role="dialog" tabindex="-1" id="radix-:Ritm:" data-state="open" class="sc-1c85c79d-0 deKjzW" aria-labelledby="radix-:RitmH1:" aria-describedby="radix-:RitmH2:">…</div> subtree intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div class="sc-ffc41c6d-1 eTHrII">…</div> from <div role="dialog" tabindex="-1" id="radix-:Ritm:" data-state="open" class="sc-1c85c79d-0 deKjzW" aria-labelledby="radix-:RitmH1:" aria-describedby="radix-:RitmH2:">…</div> subtree intercepts pointer events
+    - retrying click action
+      - waiting 100ms
+    55 × waiting for element to be visible, enabled and stable
+       - element is visible, enabled and stable
+       - scrolling into view if needed
+       - done scrolling
+       - <div class="sc-ffc41c6d-1 eTHrII">…</div> from <div role="dialog" tabindex="-1" id="radix-:Ritm:" data-state="open" class="sc-1c85c79d-0 deKjzW" aria-labelledby="radix-:RitmH1:" aria-describedby="radix-:RitmH2:">…</div> subtree intercepts pointer events
+     - retrying click action
+       - waiting 500ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781664833658_scene_001
+[2026-06-17T02:54:34.646Z] spawn: python D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-800ec3f8-61d1-4362-a209-0554c1e81744.json
+[2026-06-17T02:54:35.764Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T02:54:40.618Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T02:54:41.034Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781664875041_scene_001\02_opened.png
+[2026-06-17T02:54:41.613Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T02:54:44.276Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781664875041_scene_001\04_after_D_n_m_i.png
+[2026-06-17T02:54:44.585Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T02:54:44.645Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T02:54:44.645Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T02:54:47.512Z] worker: [BOT] ☁️ Đã đẩy 5 file lên hệ thống ngầm.
+[2026-06-17T02:54:47.513Z] worker: [BOT] ⏳ Đang chờ 30 giây để đảm bảo tất cả ảnh được tải lên thành công...
+[2026-06-17T02:55:33.010Z] worker: [BOT] Direct upload did not show composer attachments; trying asset picker.
+[2026-06-17T02:55:33.010Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-17T02:55:46.123Z] worker: [BOT] Attached ref_000.png through active file input.
+[2026-06-17T02:55:55.000Z] worker: [BOT] ❌ Lỗi: Không tìm thấy ảnh ref_001.png trong thư viện sau 30s. Bỏ qua.
+[2026-06-17T02:55:55.005Z] worker: [BOT] ⚠️ Không tìm thấy nút [+], thử các nút cũ...
+[2026-06-17T02:55:55.226Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T02:55:55.227Z] result: {"status": "error", "message": "Target page, context or browser has been closed. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781664875041_scene_001"}
+[2026-06-17T02:55:55.265Z] failed: Target page, context or browser has been closed. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781664875041_scene_001
+[2026-06-17T02:55:55.265Z] spawn: py -3 D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-800ec3f8-61d1-4362-a209-0554c1e81744.json
+[2026-06-17T02:55:56.018Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T02:56:00.972Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T02:56:01.411Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781664955521_scene_001\02_opened.png
+[2026-06-17T02:56:01.953Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T02:56:04.592Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781664955521_scene_001\04_after_D_n_m_i.png
+[2026-06-17T02:56:04.838Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T02:56:04.899Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T02:56:04.899Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...

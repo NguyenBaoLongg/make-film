@@ -1,0 +1,40 @@
+[2026-06-17T04:32:55.382Z] job started: type=scene, scene=1
+[2026-06-17T04:32:55.383Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-a7848988-9366-408a-ac0a-64aca1d50a9d.json
+[2026-06-17T04:32:56.188Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T04:33:01.348Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T04:33:01.742Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781670775597_scene_001\02_opened.png
+[2026-06-17T04:33:02.252Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T04:33:05.662Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781670775597_scene_001\04_after_D_n_m_i.png
+[2026-06-17T04:33:05.901Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T04:33:05.931Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T04:33:05.932Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T04:33:05.944Z] worker: [BOT] Nút Tác nhân đã bật sẵn.
+[2026-06-17T04:33:09.724Z] worker: [BOT] ☁️ Đã đẩy 5 file lên thư viện cùng lúc (Bulk Upload).
+[2026-06-17T04:33:09.725Z] worker: [BOT] ⏳ Đang chờ 25 giây để hệ thống upload xong toàn bộ ảnh...
+[2026-06-17T04:33:34.730Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-17T04:33:37.429Z] worker: [BOT] ❌ Không tìm thấy ảnh ref_000.png trong thư viện (cả JS lẫn Playwright).
+[2026-06-17T04:33:40.595Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_001.png vào câu lệnh.
+[2026-06-17T04:33:44.740Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_002.png vào câu lệnh.
+[2026-06-17T04:33:48.910Z] worker: [BOT] ✅ Đã ấn xác nhận Thêm ref_003.png vào câu lệnh.
+[2026-06-17T04:33:52.792Z] worker: [BOT] ⚠️ Không thấy nút 'Thêm', thử click lại option ref_004.png...
+[2026-06-17T04:33:54.315Z] worker: [BOT] ❌ Vẫn không tìm thấy nút 'Thêm vào câu lệnh' cho ref_004.png sau 2 lần thử.
+[2026-06-17T04:33:54.316Z] worker: [BOT] ⚠️ Cảnh báo: Chỉ đính kèm được 3/5 ảnh. Vẫn tiếp tục tạo...
+[2026-06-17T04:33:54.317Z] worker: [BOT] Attached 3/5 required file(s) successfully.
+[2026-06-17T04:33:54.318Z] worker: [BOT] ⏳ Đang chờ hệ thống xử lý ảnh vừa upload...
+[2026-06-17T04:34:11.395Z] worker: [BOT] ⌨️ Đang gõ chữ tuần tự...
+[2026-06-17T04:34:19.270Z] worker: Progress: filled prompt
+[2026-06-17T04:34:20.835Z] worker: Progress: submitted prompt with keyboard
+[2026-06-17T04:34:23.498Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T04:34:23.498Z] result: {"status": "error", "message": "Page.wait_for_timeout: Target page, context or browser has been closed. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781670775597_scene_001"}
+[2026-06-17T04:34:23.533Z] failed: Page.wait_for_timeout: Target page, context or browser has been closed. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781670775597_scene_001
+[2026-06-17T04:34:23.534Z] spawn: python D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-a7848988-9366-408a-ac0a-64aca1d50a9d.json
+[2026-06-17T04:34:24.356Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T04:34:26.100Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T04:34:26.101Z] result: {"status": "error", "message": "Target page, context or browser has been closed. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781670863786_scene_001"}
+[2026-06-17T04:34:26.136Z] failed: Target page, context or browser has been closed. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781670863786_scene_001
+[2026-06-17T04:34:26.137Z] spawn: py -3 D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-a7848988-9366-408a-ac0a-64aca1d50a9d.json
+[2026-06-17T04:34:26.888Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T04:34:28.061Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T04:34:28.062Z] result: {"status": "error", "message": "Target page, context or browser has been closed. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781670866397_scene_001"}
+[2026-06-17T04:34:28.099Z] failed: Target page, context or browser has been closed. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781670866397_scene_001
+[2026-06-17T04:34:28.100Z] job failed: Target page, context or browser has been closed. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781670866397_scene_001

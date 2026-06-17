@@ -1,0 +1,93 @@
+[2026-06-17T05:31:57.681Z] job started: type=scene, scene=1
+[2026-06-17T05:31:57.682Z] spawn: D:\workspace\Python\App\make film\ai-film-tool\backend\venv\Scripts\python.exe D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-6b60d47b-7f1c-4876-afc9-5b6c18aa79bc.json
+[2026-06-17T05:31:58.670Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T05:32:03.878Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T05:32:04.616Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781674317903_scene_001\02_opened.png
+[2026-06-17T05:32:05.626Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T05:32:10.587Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781674317903_scene_001\04_after_D_n_m_i.png
+[2026-06-17T05:32:10.781Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T05:32:10.812Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T05:32:10.813Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T05:32:13.479Z] worker: [BOT] Đã bật lại nút Tác nhân.
+[2026-06-17T05:32:15.773Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-17T05:32:17.913Z] worker: [BOT] ☁️ Đã gửi ref_000.png, đang chờ upload...
+[2026-06-17T05:32:20.942Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:32:23.971Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:32:27.010Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:32:30.349Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_000.png.
+[2026-06-17T05:32:33.457Z] worker: [BOT] ☁️ Đã gửi ref_001.png, đang chờ upload...
+[2026-06-17T05:32:36.485Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:32:39.522Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:32:42.565Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:32:45.945Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_001.png.
+[2026-06-17T05:32:49.077Z] worker: [BOT] ☁️ Đã gửi ref_002.png, đang chờ upload...
+[2026-06-17T05:32:52.106Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:32:55.140Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:32:58.185Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:33:01.546Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_002.png.
+[2026-06-17T05:33:04.715Z] worker: [BOT] ☁️ Đã gửi ref_003.png, đang chờ upload...
+[2026-06-17T05:33:07.750Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:33:10.773Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:33:13.810Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:33:17.165Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_003.png.
+[2026-06-17T05:33:20.294Z] worker: [BOT] ☁️ Đã gửi ref_004.png, đang chờ upload...
+[2026-06-17T05:33:23.334Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:33:26.374Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:33:29.408Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:33:32.763Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_004.png.
+[2026-06-17T05:33:33.773Z] worker: [BOT] Attached 5/5 required file(s) successfully.
+[2026-06-17T05:33:33.774Z] worker: [BOT] ⏳ Đang chờ hệ thống xử lý ảnh vừa upload...
+[2026-06-17T05:33:50.800Z] worker: [BOT] ⌨️ Đang gõ chữ tuần tự...
+[2026-06-17T05:33:58.276Z] worker: Progress: filled prompt
+[2026-06-17T05:33:58.280Z] worker: [BOT] Baseline: 11 media identifiers đã lưu trước khi submit.
+[2026-06-17T05:33:59.853Z] worker: Progress: submitted prompt with keyboard
+[2026-06-17T05:34:02.864Z] worker: [BOT] ⏳ Đã Submit, đang chờ image hoàn thành...
+[2026-06-17T05:34:07.871Z] worker: [BOT] ⏳ Chờ thêm 15s cho UI ổn định...
+[2026-06-17T05:34:23.046Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781674317903_scene_001\43_flow_error_visible.png
+[2026-06-17T05:34:23.161Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781674317903_scene_001\44_generation_failed.png
+[2026-06-17T05:34:23.390Z] worker: [FlowWorker] screenshot failed: Event loop is closed! Is Playwright already stopped?
+[2026-06-17T05:34:23.391Z] result: {"status": "error", "message": "[BOT] Lỗi khi tạo/tải image: [BOT] ❌ Lỗi: Google Flow báo lỗi hoặc tạo không thành công.. Debug: D:\\workspace\\Python\\App\\make film\\ai-film-tool\\backend\\generated\\_debug\\1781674317903_scene_001"}
+[2026-06-17T05:34:23.422Z] failed: [BOT] Lỗi khi tạo/tải image: [BOT] ❌ Lỗi: Google Flow báo lỗi hoặc tạo không thành công.. Debug: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781674317903_scene_001
+[2026-06-17T05:34:23.423Z] spawn: python D:\workspace\Python\App\make film\ai-film-tool\backend\python_workers\browser_automation.py --job D:\workspace\Python\App\make film\ai-film-tool\backend\tmp\jobs\-api-generate-flow-scene-stream-1-6b60d47b-7f1c-4876-afc9-5b6c18aa79bc.json
+[2026-06-17T05:34:24.265Z] worker: [BOT] 🌐 Đang mở trang web Google Flow...
+[2026-06-17T05:34:29.396Z] worker: Progress: opened https://labs.google/fx/vi/tools/flow
+[2026-06-17T05:34:29.752Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781674463708_scene_001\02_opened.png
+[2026-06-17T05:34:30.307Z] worker: Progress: clicked entry button: Dự án mới
+[2026-06-17T05:34:33.750Z] worker: [FlowWorker] screenshot: D:\workspace\Python\App\make film\ai-film-tool\backend\generated\_debug\1781674463708_scene_001\04_after_D_n_m_i.png
+[2026-06-17T05:34:34.000Z] worker: Progress: new project control not found; continuing in current Flow workspace
+[2026-06-17T05:34:34.049Z] worker: [BOT] 🎬 [1/2] Bắt đầu quá trình tạo Ảnh (Image Generation)...
+[2026-06-17T05:34:34.049Z] worker: [BOT] ⚙️ Đang cấu hình cài đặt cho image...
+[2026-06-17T05:34:36.708Z] worker: [BOT] Đã bật lại nút Tác nhân.
+[2026-06-17T05:34:39.059Z] worker: [BOT] ☁️ Đang đính kèm lần lượt 5 ảnh vào ô chat...
+[2026-06-17T05:34:41.180Z] worker: [BOT] ☁️ Đã gửi ref_000.png, đang chờ upload...
+[2026-06-17T05:34:44.220Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:34:47.284Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:34:50.322Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:34:53.679Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_000.png.
+[2026-06-17T05:34:56.791Z] worker: [BOT] ☁️ Đã gửi ref_001.png, đang chờ upload...
+[2026-06-17T05:34:59.829Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:35:02.889Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:35:05.934Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:35:09.297Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_001.png.
+[2026-06-17T05:35:12.467Z] worker: [BOT] ☁️ Đã gửi ref_002.png, đang chờ upload...
+[2026-06-17T05:35:15.539Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:35:18.614Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:35:21.674Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:35:25.053Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_002.png.
+[2026-06-17T05:35:28.217Z] worker: [BOT] ☁️ Đã gửi ref_003.png, đang chờ upload...
+[2026-06-17T05:35:31.276Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:35:34.318Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:35:37.381Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:35:40.793Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_003.png.
+[2026-06-17T05:35:44.006Z] worker: [BOT] ☁️ Đã gửi ref_004.png, đang chờ upload...
+[2026-06-17T05:35:47.048Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 1)
+[2026-06-17T05:35:50.102Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 2)
+[2026-06-17T05:35:53.145Z] worker: [BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round 3)
+[2026-06-17T05:35:56.534Z] worker: [BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho ref_004.png.
+[2026-06-17T05:35:57.546Z] worker: [BOT] Attached 5/5 required file(s) successfully.
+[2026-06-17T05:35:57.547Z] worker: [BOT] ⏳ Đang chờ hệ thống xử lý ảnh vừa upload...
+[2026-06-17T05:36:14.700Z] worker: [BOT] ⌨️ Đang gõ chữ tuần tự...
+[2026-06-17T05:36:23.411Z] worker: Progress: filled prompt
+[2026-06-17T05:36:23.419Z] worker: [BOT] Baseline: 11 media identifiers đã lưu trước khi submit.
+[2026-06-17T05:36:25.021Z] worker: Progress: submitted prompt with keyboard
+[2026-06-17T05:36:28.034Z] worker: [BOT] ⏳ Đã Submit, đang chờ image hoàn thành...

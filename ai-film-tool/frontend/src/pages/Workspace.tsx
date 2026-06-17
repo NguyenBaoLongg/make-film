@@ -368,6 +368,7 @@ export default function Workspace() {
         </main>
       </div>
 
+      {/* Đã ẩn pipeline log theo yêu cầu
       {pipelineLogs.length > 0 && (
         <div className="absolute bottom-4 right-4 z-40 flex max-h-80 w-[520px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border border-border bg-card/95 shadow-2xl backdrop-blur">
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
@@ -383,6 +384,7 @@ export default function Workspace() {
           </div>
         </div>
       )}
+      */}
 
       {showBatchModal && <BatchModal onClose={() => setShowBatchModal(false)} />}
       {showChromeManager && <ChromeManager onClose={() => setShowChromeManager(false)} />}
