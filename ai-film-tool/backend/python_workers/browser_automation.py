@@ -360,7 +360,7 @@ def choose_image_settings(page: Page, job: Dict[str, Any], debug: FlowDebug) -> 
 
 def choose_video_settings(page: Page, job: Dict[str, Any], debug: FlowDebug) -> None:
     options = job.get("options") if isinstance(job.get("options"), dict) else {}
-    model = str(options.get("videoModel") or options.get("model") or "Veo 3.1")
+    model = str(options.get("videoModel") or options.get("model") or "Veo 3.1 - Lite [Lower Priority]")
     ratio = str(options.get("videoRatio") or options.get("ratio") or "16:9")
     mode = str(options.get("videoMode") or options.get("mode") or "Thành phần") # Frames -> Khung hình, References -> Thành phần
     duration = str(options.get("videoDuration") or options.get("duration") or "8s")
@@ -1125,19 +1125,26 @@ def run_generation_step(
         target_img = None
 
         while time.time() < deadline:
-            generated_imgs = page.locator('img[alt="Hình ảnh được tạo"]')
-            for i in range(generated_imgs.count()):
-                img = generated_imgs.nth(i)
+            if media_type == "video":
+                generated_media = page.locator('video')
+            else:
+                generated_media = page.locator('img[alt="Hình ảnh được tạo"], img[alt*="được tạo"]')
+
+            for i in range(generated_media.count()):
+                media_el = generated_media.nth(i)
                 try:
-                    if not img.is_visible(timeout=500):
+                    if not media_el.is_visible(timeout=500):
                         continue
-                    box = img.bounding_box()
+                    box = media_el.bounding_box()
                     if not box or box["width"] < 100 or box["height"] < 100:
                         continue
                     
-                    src = img.evaluate("el => el.currentSrc || el.src || ''")
+                    src = media_el.evaluate("el => el.currentSrc || el.src || ''")
                     if not src:
-                        continue
+                        # Video có thể dùng thẻ <source> bên trong
+                        src = media_el.evaluate("el => { const srcEl = el.querySelector('source'); return srcEl ? srcEl.src : ''; }")
+                        if not src:
+                            continue
                         
                     # Lấy UUID từ src để so sánh chính xác (bỏ qua query width/height nếu có)
                     identifier = src
@@ -1150,11 +1157,16 @@ def run_generation_step(
                     except Exception:
                         pass
 
-                    # CHỈ chọn nếu ảnh này chưa từng xuất hiện trước khi submit
+                    # CHỈ chọn nếu media này chưa từng xuất hiện trước khi submit
                     if src not in baseline_media and identifier not in baseline_media:
-                        is_complete = img.evaluate("el => el.complete === true && el.naturalWidth > 0")
+                        if media_type == "video":
+                            # Với video, readyState >= 3 có nghĩa là HAVE_FUTURE_DATA (đã tải đủ để phát)
+                            is_complete = media_el.evaluate("el => el.readyState >= 3 || el.src.startsWith('blob:')")
+                        else:
+                            is_complete = media_el.evaluate("el => el.complete === true && el.naturalWidth > 0")
+                            
                         if is_complete:
-                            target_img = img
+                            target_img = media_el
                             break
                 except Exception:
                     continue
@@ -1163,6 +1175,18 @@ def run_generation_step(
                 debug.log(f"[BOT] ⏳ Đã tìm thấy {media_type} mới do AI tạo ra, chờ thêm 5s để render 100%...")
                 page.wait_for_timeout(5000)
                 break
+
+            # Tự động bấm "Thử lại" nếu bị lỗi "Không thành công" (vi phạm chính sách)
+            retry_btn = page.locator('button', has=page.locator('i', has_text="refresh")).filter(has_text=re.compile(r"Thử lại|Retry", re.I)).last
+            if visible_first(retry_btn, 500):
+                debug.log(f"[BOT] ⚠️ Bị từ chối do vi phạm chính sách hoặc lỗi. Đang tự động ấn 'Thử lại' để tạo lại {media_type}...")
+                try:
+                    retry_btn.click(timeout=3000)
+                    page.wait_for_timeout(5000)
+                    deadline = time.time() + timeout_seconds # Reset lại thời gian chờ
+                    continue
+                except Exception as e:
+                    debug.log(f"[BOT] ⚠️ Lỗi khi ấn Thử lại: {e}")
 
             # Kiểm tra lỗi (Soft check để tránh False Positive)
             blocked = page.get_by_text(re.compile(r"failed|error|policy|violat|could not|try again|không thành công|vi phạm", re.I))
@@ -1202,8 +1226,36 @@ def run_generation_step(
             except Exception as e:
                 debug.log(f"[BOT] ⚠️ Lỗi API request: {e}")
 
-        # Phương pháp 2: Canvas toDataURL (fallback)
-        if not downloaded:
+        # Phương pháp 2: Fetch Blob trực tiếp trong trình duyệt (Chuyên trị Video và lỗi Redirect/CORS)
+        if not downloaded and src:
+            debug.log(f"[BOT] ⚠️ Thử tải qua trình duyệt (fetch blob)...")
+            try:
+                data_url = page.evaluate("""
+                async (url) => {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const blob = await res.blob();
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                }
+                """, full_url)
+                
+                if data_url and "," in data_url:
+                    import base64
+                    header, b64data = data_url.split(",", 1)
+                    output_path.write_bytes(base64.b64decode(b64data))
+                    if output_path.stat().st_size > 1000:
+                        debug.log(f"[BOT] 💾 Đã lưu {media_type} qua fetch blob ({output_path.stat().st_size} bytes).")
+                        downloaded = True
+            except Exception as e:
+                debug.log(f"[BOT] ⚠️ Lỗi fetch blob: {e}")
+
+        # Phương pháp 3: Canvas toDataURL (Fallback cuối cùng cho Image, không dùng được cho Video mp4)
+        if not downloaded and media_type != "video":
             debug.log(f"[BOT] ⚠️ Thử tải qua canvas toDataURL...")
             try:
                 data_url = target_img.evaluate("""

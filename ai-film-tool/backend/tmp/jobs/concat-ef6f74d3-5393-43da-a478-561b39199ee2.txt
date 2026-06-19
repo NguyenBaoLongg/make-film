@@ -1,0 +1,8 @@
+file 'D:/workspace/Python/App/make film/ai-film-tool/backend/generated/FILM_scene_001_video_1781836949679.mp4'
+file 'D:/workspace/Python/App/make film/ai-film-tool/backend/generated/FILM_scene_002_video_1781837279314.mp4'
+file 'D:/workspace/Python/App/make film/ai-film-tool/backend/generated/FILM_scene_003_video_1781837929157.mp4'
+file 'D:/workspace/Python/App/make film/ai-film-tool/backend/generated/FILM_scene_004_video_1781838454611.mp4'
+file 'D:/workspace/Python/App/make film/ai-film-tool/backend/generated/FILM_scene_005_video_1781838832685.mp4'
+file 'D:/workspace/Python/App/make film/ai-film-tool/backend/generated/FILM_scene_006_video_1781839208114.mp4'
+file 'D:/workspace/Python/App/make film/ai-film-tool/backend/generated/FILM_scene_007_video_1781839529790.mp4'
+file 'D:/workspace/Python/App/make film/ai-film-tool/backend/generated/FILM_scene_008_video_1781839928145.mp4'
