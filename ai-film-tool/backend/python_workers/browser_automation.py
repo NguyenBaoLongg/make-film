@@ -835,7 +835,12 @@ def fill_prompt(prompt_input: Locator, prompt: str, page: Page, debug: FlowDebug
         page.wait_for_timeout(500)
         
         debug.log("[BOT] ⌨️ Đang gõ chữ tuần tự...")
-        textbox.press_sequentially(prompt, delay=10)
+        lines = prompt.split('\n')
+        for i, line in enumerate(lines):
+            if line:
+                textbox.press_sequentially(line, delay=10)
+            if i < len(lines) - 1:
+                page.keyboard.press("Shift+Enter")
         page.wait_for_timeout(1000)
             
     except Exception as e:

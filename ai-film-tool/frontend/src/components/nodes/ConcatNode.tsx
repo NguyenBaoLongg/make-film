@@ -1,6 +1,8 @@
 import { Handle, Position } from '@xyflow/react';
+import { useStore } from '../../store/useStore';
 
-export default function ConcatNode({ data }: { data: any }) {
+export default function ConcatNode({ id, data }: { id: string; data: any }) {
+  const updateNodeData = useStore((state) => state.updateNodeData);
   const getBorderColor = () => {
     switch (data.status) {
       case 'processing': return 'border-orange-500 animate-[pulse_1s_ease-in-out_infinite] shadow-[0_0_15px_rgba(249,115,22,0.5)]';
@@ -52,6 +54,53 @@ export default function ConcatNode({ data }: { data: any }) {
         ) : (
           <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
             Chỉ bắt đầu ghép sau khi tất cả video node đã tải về thành công.
+          </div>
+        )}
+
+        {/* Settings */}
+        {data.status !== 'processing' && (
+          <div className="mt-4 border-t border-border pt-3 space-y-3">
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Chọn kho nhạc có sẵn</label>
+              <select 
+                className="w-full bg-input border border-border rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                onChange={(event) => {
+                  if (event.target.value) {
+                    updateNodeData(id, { bgmUrl: event.target.value });
+                  }
+                }}
+                defaultValue=""
+              >
+                <option value="" disabled>--- Chọn nhạc hoạt hình ---</option>
+                <option value="https://upload.wikimedia.org/wikipedia/commons/4/4b/Kevin_MacLeod_-_Fluffing_a_Duck.ogg">🦆 Fluffing a Duck (Vui nhộn, lạch bạch)</option>
+                <option value="https://upload.wikimedia.org/wikipedia/commons/6/69/Kevin_MacLeod_-_Monkeys_Spinning_Monkeys.ogg">🐒 Monkeys Spinning Monkeys (Tinh nghịch, lén lút)</option>
+                <option value="https://upload.wikimedia.org/wikipedia/commons/9/91/Kevin_MacLeod_-_The_Builder.ogg">🔨 The Builder (Xây dựng, tò mò)</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Hoặc Nhập Nhạc Nền (BGM URL)</label>
+              <input 
+                type="text"
+                className="w-full bg-input border border-border rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                placeholder="https://.../audio.mp3"
+                value={data.bgmUrl || ""}
+                onChange={(event) => updateNodeData(id, { bgmUrl: event.target.value })}
+              />
+              <p className="text-[9px] text-muted-foreground mt-1">Hỗ trợ các định dạng MP3, WAV hoặc link OGG.</p>
+            </div>
+
+            <div className="pt-2 border-t border-border">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="accent-primary w-3 h-3"
+                  checked={data.autoSubtitles || false}
+                  onChange={(e) => updateNodeData(id, { autoSubtitles: e.target.checked })}
+                />
+                <span className="text-xs text-muted-foreground">Tự động nghe và tạo phụ đề (Whisper)</span>
+              </label>
+            </div>
           </div>
         )}
       </div>

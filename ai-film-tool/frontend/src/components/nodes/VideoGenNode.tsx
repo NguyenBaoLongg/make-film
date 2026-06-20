@@ -67,7 +67,7 @@ export default function VideoGenNode({ id, data }: { id: string; data: any }) {
 
         {/* Motion Prompt */}
         {data.status !== 'processing' && !data.resultUrl && (
-          <>
+          <div className="space-y-2">
             <div>
               <label className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Motion Prompt</label>
               <input 
@@ -78,7 +78,7 @@ export default function VideoGenNode({ id, data }: { id: string; data: any }) {
                 onChange={(event) => updateNodeData(id, { motionPrompt: event.target.value })}
               />
             </div>
-          </>
+          </div>
         )}
 
         {data.errorMessage && data.status === 'error' && (

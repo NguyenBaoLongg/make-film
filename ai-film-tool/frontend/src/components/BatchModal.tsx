@@ -8,6 +8,11 @@ interface BatchModalProps {
 
 type TextSetter = Dispatch<SetStateAction<string>>;
 
+export interface SceneInput {
+  imagePrompt: string;
+  videoPrompt: string;
+}
+
 const edgeStyle = { stroke: '#10b981', strokeWidth: 2 };
 const faintEdgeStyle = { stroke: '#10b981', strokeWidth: 2, opacity: 0.5 };
 const markerEnd = { type: 'arrowclosed' as any, color: '#10b981' };
@@ -17,8 +22,7 @@ export default function BatchModal({ onClose }: BatchModalProps) {
 
   const [topic, setTopic] = useState('');
   const [filePrefix, setFilePrefix] = useState('FILM');
-  const [imagePrompts, setImagePrompts] = useState('');
-  const [videoPrompts, setVideoPrompts] = useState('');
+  const [scenes, setScenes] = useState<SceneInput[]>([{ imagePrompt: '', videoPrompt: '' }]);
   const [imgModel, setImgModel] = useState('Nano Banana');
   const [imgRes, setImgRes] = useState('4k');
   const [imgRatio, setImgRatio] = useState('16:9');
@@ -31,9 +35,7 @@ export default function BatchModal({ onClose }: BatchModalProps) {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
-  const imageLines = imagePrompts.split('\n').map((line) => line.trim()).filter(Boolean);
-  const videoLines = videoPrompts.split('\n').map((line) => line.trim()).filter(Boolean);
-  const nodeCount = Math.max(imageLines.length, videoLines.length);
+  const nodeCount = scenes.length;
 
   const handleCreateNodes = () => {
     if (nodeCount === 0) return;
@@ -68,6 +70,7 @@ export default function BatchModal({ onClose }: BatchModalProps) {
     });
 
     for (let index = 0; index < nodeCount; index += 1) {
+      const scene = scenes[index];
       const sceneIndex = index + 1;
       const y = index * 280;
       const imageId = `img-${batchId}-${sceneIndex}`;
@@ -80,7 +83,7 @@ export default function BatchModal({ onClose }: BatchModalProps) {
         data: {
           status: 'waiting',
           sceneIndex,
-          prompt: imageLines[index] || `Image for scene ${sceneIndex}`,
+          prompt: scene.imagePrompt || `Image for scene ${sceneIndex}`,
           model: imgModel,
           resolution: imgRes,
           ratio: imgRatio,
@@ -94,7 +97,7 @@ export default function BatchModal({ onClose }: BatchModalProps) {
         data: {
           status: 'waiting',
           sceneIndex,
-          motionPrompt: videoLines[index] || `Motion for scene ${sceneIndex}`,
+          motionPrompt: scene.videoPrompt || `Motion for scene ${sceneIndex}`,
           model: vidModel,
           resolution: vidRes,
           ratio: vidRatio,
@@ -160,13 +163,27 @@ export default function BatchModal({ onClose }: BatchModalProps) {
     });
   };
 
-  const handleTextFile = (event: ChangeEvent<HTMLInputElement>, setter: TextSetter) => {
+  const handleJsonFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (loadEvent) => {
-      setter(String(loadEvent.target?.result || ''));
+      try {
+        const text = String(loadEvent.target?.result || '');
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          const newScenes = parsed.map((item: any) => ({
+            imagePrompt: item.image_prompt || item.imagePrompt || '',
+            videoPrompt: item.video_prompt || item.videoPrompt || item.motion_prompt || ''
+          }));
+          if (newScenes.length > 0) {
+            setScenes(newScenes);
+          }
+        }
+      } catch (e) {
+        alert('File JSON không hợp lệ');
+      }
     };
     reader.readAsText(file, 'utf-8');
     event.target.value = '';
@@ -286,6 +303,7 @@ export default function BatchModal({ onClose }: BatchModalProps) {
                   <span className="mb-1 block text-[10px] uppercase text-gray-500">Model</span>
                   <select value={vidModel} onChange={(event) => setVidModel(event.target.value)} className="w-full rounded border border-[#1e293b] bg-[#0b101a] px-2 py-2 text-xs text-white">
                     <option>Veo 3</option>
+                    <option>Veo 3.1 - Lite [Lower Priority]</option>
                     <option>Omni Flash</option>
                   </select>
                 </label>
@@ -321,37 +339,66 @@ export default function BatchModal({ onClose }: BatchModalProps) {
             </div>
           </section>
 
-          <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-red-400">Prompt tạo ảnh</h3>
-                <label className="cursor-pointer rounded border border-red-500/20 bg-red-500/10 px-3 py-1 text-[10px] font-bold text-red-400">
-                  Tải .txt
-                  <input type="file" accept=".txt" className="hidden" onChange={(event) => handleTextFile(event, setImagePrompts)} />
+          <section className="space-y-4 border-t border-[#1e293b] pt-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-[#10b981]">Kịch bản (Danh sách cảnh)</h3>
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer rounded bg-[#1e293b] px-3 py-1.5 text-xs font-bold text-gray-300 hover:bg-[#1e293b]/80">
+                  Nhập JSON
+                  <input type="file" accept=".json" className="hidden" onChange={handleJsonFile} />
                 </label>
+                <button
+                  onClick={() => setScenes([...scenes, { imagePrompt: '', videoPrompt: '' }])}
+                  className="rounded bg-[#10b981] px-3 py-1.5 text-xs font-bold text-black hover:bg-[#10b981]/90"
+                >
+                  + Thêm Cảnh
+                </button>
               </div>
-              <textarea
-                value={imagePrompts}
-                onChange={(event) => setImagePrompts(event.target.value)}
-                className="h-52 w-full resize-none rounded-xl border border-[#1e293b] bg-[#111827] p-4 text-sm leading-relaxed text-gray-200 outline-none focus:border-[#10b981]"
-                placeholder="Mỗi dòng là prompt tạo ảnh cho một cảnh..."
-              />
             </div>
 
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-yellow-500">Prompt tạo video</h3>
-                <label className="cursor-pointer rounded border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-[10px] font-bold text-yellow-500">
-                  Tải .txt
-                  <input type="file" accept=".txt" className="hidden" onChange={(event) => handleTextFile(event, setVideoPrompts)} />
-                </label>
-              </div>
-              <textarea
-                value={videoPrompts}
-                onChange={(event) => setVideoPrompts(event.target.value)}
-                className="h-52 w-full resize-none rounded-xl border border-[#1e293b] bg-[#111827] p-4 text-sm leading-relaxed text-gray-200 outline-none focus:border-[#10b981]"
-                placeholder="Mỗi dòng là prompt chuyển động cho video cùng cảnh..."
-              />
+            <div className="grid grid-cols-1 gap-4">
+              {scenes.map((scene, index) => (
+                <div key={index} className="relative rounded-xl border border-[#1e293b] bg-[#111827] p-4">
+                  {scenes.length > 1 && (
+                    <button
+                      onClick={() => setScenes(scenes.filter((_, i) => i !== index))}
+                      className="absolute right-4 top-4 text-xs font-bold text-red-500 hover:text-red-400"
+                    >
+                      Xóa cảnh
+                    </button>
+                  )}
+                  <h4 className="mb-3 text-xs font-bold text-gray-400">CẢNH {index + 1}</h4>
+                  
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-[10px] uppercase text-red-400 font-bold">Image Prompt</label>
+                      <textarea
+                        value={scene.imagePrompt}
+                        onChange={(e) => {
+                          const newScenes = [...scenes];
+                          newScenes[index].imagePrompt = e.target.value;
+                          setScenes(newScenes);
+                        }}
+                        className="h-24 w-full resize-none rounded border border-[#1e293b] bg-[#0b101a] p-2 text-xs text-gray-200 outline-none focus:border-[#10b981]"
+                        placeholder="Mô tả hình ảnh..."
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[10px] uppercase text-yellow-500 font-bold">Video Prompt (Motion)</label>
+                      <textarea
+                        value={scene.videoPrompt}
+                        onChange={(e) => {
+                          const newScenes = [...scenes];
+                          newScenes[index].videoPrompt = e.target.value;
+                          setScenes(newScenes);
+                        }}
+                        className="h-24 w-full resize-none rounded border border-[#1e293b] bg-[#0b101a] p-2 text-xs text-gray-200 outline-none focus:border-[#10b981]"
+                        placeholder="Mô tả chuyển động..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         </div>

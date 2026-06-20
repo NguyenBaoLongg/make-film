@@ -11,6 +11,7 @@ const generatedDir = path.join(process.cwd(), 'generated');
 const jobsDir = path.join(process.cwd(), 'tmp', 'jobs');
 const workerLogsDir = path.join(generatedDir, '_logs');
 const flowWorkerScript = path.join(process.cwd(), 'python_workers', 'browser_automation.py');
+const videoWorkerScript = path.join(process.cwd(), 'python_workers', 'video_editor.py');
 
 type WorkerType = 'image' | 'video' | 'scene';
 
@@ -567,6 +568,8 @@ router.post('/flow-scene', async (req, res) => {
 router.post('/concat-videos', async (req, res) => {
   const {
     videoUrls,
+    bgmUrl,
+    autoSubtitles,
     filePrefix = 'film',
   } = req.body;
 
@@ -577,19 +580,63 @@ router.post('/concat-videos', async (req, res) => {
   try {
     ensureRuntimeDirs();
     const inputPaths = videoUrls.map((url) => resolveGeneratedUrlToPath(String(url)));
-    const outputPath = path.join(generatedDir, `${sanitizeFilePart(filePrefix)}_final_${Date.now()}.mp4`);
+    
+    let resolvedBgmPath = '';
+    if (bgmUrl && typeof bgmUrl === 'string') {
+      if (bgmUrl.startsWith('http')) {
+        resolvedBgmPath = bgmUrl;
+      } else {
+        try {
+          resolvedBgmPath = resolveGeneratedUrlToPath(bgmUrl);
+        } catch {
+          // If it's not a generated asset, just pass it (e.g. an absolute path)
+          resolvedBgmPath = bgmUrl;
+        }
+      }
+    }
 
-    try {
-      await runFfmpegConcat(inputPaths, outputPath, false);
-    } catch (copyError) {
-      console.warn('[FFmpeg] stream copy concat failed, retrying with transcode');
-      await runFfmpegConcat(inputPaths, outputPath, true);
+    const outputPath = path.join(generatedDir, `${sanitizeFilePart(filePrefix)}_final_${Date.now()}.mp4`);
+    
+    const jobId = safeRunId(crypto.randomUUID());
+    const jobPath = path.join(jobsDir, `video-job-${jobId}.json`);
+    fs.writeFileSync(jobPath, JSON.stringify({
+      videoUrls: inputPaths,
+      bgmUrl: resolvedBgmPath,
+      auto_subtitles: Boolean(autoSubtitles),
+      output_path: outputPath
+    }, null, 2), 'utf8');
+
+    let parsed = null;
+    let lastError = '';
+    
+    for (const candidate of getPythonCandidates()) {
+      const args = [...candidate.argsPrefix, videoWorkerScript, '--job', jobPath];
+      console.log(`[Video Editor] ${candidate.command} ${args.join(' ')}`);
+      try {
+        const result = await runProcess(candidate.command, args);
+        if (result.code !== 0) {
+           lastError = result.stderr || result.stdout;
+           continue;
+        }
+        parsed = parseWorkerJson(result.stdout);
+        if (parsed.status === 'error') {
+           lastError = parsed.message;
+           continue;
+        }
+        break; // Success
+      } catch (err: any) {
+        lastError = err.message;
+      }
+    }
+
+    if (!parsed || parsed.status === 'error') {
+       throw new Error(`Video editor failed: ${lastError}`);
     }
 
     res.json({
       status: 'success',
       type: 'concat',
-      result_url: publicUrlForFile(outputPath),
+      result_url: publicUrlForFile(parsed.local_path),
       input_count: inputPaths.length,
     });
   } catch (error: any) {

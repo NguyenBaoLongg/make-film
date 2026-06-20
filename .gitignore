@@ -1,0 +1,23 @@
+# Node
+node_modules/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# App Specific Temp Data
+ai-film-tool/backend/chrome_profiles/
+ai-film-tool/backend/python_workers/whisper_models/
+ai-film-tool/backend/generated/
+ai-film-tool/backend/tmp/
+
+# Media files
+*.mp4
+*.png
+*.wav
+*.srt
+*.json

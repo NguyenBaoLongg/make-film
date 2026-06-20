@@ -452,9 +452,11 @@ async function createFlowScene(params: {
   }, params.sceneIndex);
 }
 
-async function concatVideos(videoUrls: string[], filePrefix: string) {
+async function concatVideos(videoUrls: string[], filePrefix: string, bgmUrl?: string, autoSubtitles?: boolean) {
   return apiPost<GenerateResponse>('/api/generate/concat-videos', {
     videoUrls,
+    bgmUrl,
+    autoSubtitles,
     filePrefix,
   });
 }
@@ -766,9 +768,12 @@ export const useStore = create<AppState>((set, get) => ({
           throw new Error('Concat node is missing completed video inputs.');
         }
 
+        const bgmUrl = dataString(concatNode, 'bgmUrl', '');
+        const autoSubtitles = Boolean(nodeData(concatNode).autoSubtitles);
+
         get().updateNodeStatus(concatNode.id, 'processing');
         get().addPipelineLog(`Concat started: ${videoUrls.length} video(s).`);
-        const concatResult = await concatVideos(videoUrls, get().filePrefix);
+        const concatResult = await concatVideos(videoUrls, get().filePrefix, bgmUrl, autoSubtitles);
 
         if (!concatResult.result_url) {
           throw new Error('Concat finished without a result URL');
