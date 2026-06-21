@@ -29,7 +29,7 @@ export default function BatchModal({ onClose }: BatchModalProps) {
   const [vidModel, setVidModel] = useState('Veo 3');
   const [vidRes, setVidRes] = useState('1080p');
   const [vidRatio, setVidRatio] = useState('16:9');
-  const [vidMode, setVidMode] = useState('Frames to Video');
+  const [vidMode, setVidMode] = useState('Khung hình');
   const [vidDuration, setVidDuration] = useState(8);
   const [voiceover, setVoiceover] = useState(false);
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
@@ -173,10 +173,19 @@ export default function BatchModal({ onClose }: BatchModalProps) {
         const text = String(loadEvent.target?.result || '');
         const parsed = JSON.parse(text);
         if (Array.isArray(parsed)) {
-          const newScenes = parsed.map((item: any) => ({
-            imagePrompt: item.image_prompt || item.imagePrompt || '',
-            videoPrompt: item.video_prompt || item.videoPrompt || item.motion_prompt || ''
-          }));
+          const newScenes = parsed.map((item: any) => {
+            const imgP = item.image_prompt || item.imagePrompt || '';
+            let vidP = item.video_prompt || item.videoPrompt || item.motion_prompt || '';
+            
+            if (typeof vidP === 'object' && vidP !== null) {
+              vidP = JSON.stringify(vidP, null, 2);
+            }
+            
+            return {
+              imagePrompt: typeof imgP === 'object' ? JSON.stringify(imgP, null, 2) : String(imgP),
+              videoPrompt: String(vidP)
+            };
+          });
           if (newScenes.length > 0) {
             setScenes(newScenes);
           }
@@ -321,8 +330,8 @@ export default function BatchModal({ onClose }: BatchModalProps) {
                   <option>9:16</option>
                 </select>
                 <select value={vidMode} onChange={(event) => setVidMode(event.target.value)} className="rounded border border-[#1e293b] bg-[#0b101a] px-2 py-2 text-xs text-white">
-                  <option>Frames to Video</option>
-                  <option>Ingredients to Video</option>
+                  <option>Khung hình</option>
+                  <option>Thành phần</option>
                 </select>
               </div>
               <div className="mt-4">

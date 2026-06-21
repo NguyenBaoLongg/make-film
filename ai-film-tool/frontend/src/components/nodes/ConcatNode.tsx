@@ -35,7 +35,7 @@ export default function ConcatNode({ id, data }: { id: string; data: any }) {
       <div className="space-y-3 p-4">
         {data.status === 'completed' && data.resultUrl ? (
           <>
-            <video src={data.resultUrl} controls className="w-full rounded border border-green-500/30" />
+            <video src={data.resultUrl} controls preload="auto" className="w-full rounded border border-green-500/30" />
             <button
               onClick={handleDownload}
               className="w-full rounded bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/90"
@@ -60,6 +60,17 @@ export default function ConcatNode({ id, data }: { id: string; data: any }) {
         {/* Settings */}
         {data.status !== 'processing' && (
           <div className="mt-4 border-t border-border pt-3 space-y-3">
+            <div>
+              <label className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Tiêu đề phim</label>
+              <input 
+                type="text"
+                className="w-full bg-input border border-border rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                placeholder="Ví dụ: Bobo và chiếc diều bay mất"
+                value={data.topic || ""}
+                onChange={(event) => updateNodeData(id, { topic: event.target.value })}
+              />
+            </div>
+
             <div>
               <label className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Chọn kho nhạc có sẵn</label>
               <select 

@@ -26,6 +26,7 @@ def run(job_path):
         
     video_urls = job.get('videoUrls', [])
     bgm_url = job.get('bgmUrl', '')
+    video_title = str(job.get('videoTitle') or '').strip()
     auto_subtitles = job.get('auto_subtitles', False)
     output_path = job.get('output_path')
     
@@ -68,7 +69,7 @@ def run(job_path):
             import whisper
             from whisper.utils import get_writer
             
-            print(json.dumps({"status": "processing", "message": "Loading Whisper model and transcribing..."}))
+            print("Loading Whisper model and transcribing...", file=sys.stderr)
             # Đổi sang model 'medium' siêu xịn và lưu thẳng vào ổ D để không bị đầy ổ C
             models_dir = os.path.join(os.path.dirname(__file__), "whisper_models")
             os.makedirs(models_dir, exist_ok=True)
@@ -88,18 +89,32 @@ def run(job_path):
             if os.path.exists(srt_path):
                 has_subs = True
                 
+        # Probe first video to determine target resolution
+        target_width, target_height = 1920, 1080
+        if video_urls:
+            try:
+                probe = ffmpeg.probe(video_urls[0])
+                for stream in probe.get('streams', []):
+                    if stream.get('codec_type') == 'video':
+                        target_width = int(stream['width'])
+                        target_height = int(stream['height'])
+                        break
+            except Exception:
+                pass
+
         # Build filter graph for final video
         streams = []
         for vid in video_urls:
             in_file = ffmpeg.input(vid)
-            # Normalize video to 1920x1080 30fps
-            v = in_file.video.filter('scale', 1920, 1080, force_original_aspect_ratio='decrease') \
-                             .filter('pad', 1920, 1080, '(ow-iw)/2', '(oh-ih)/2') \
+            # Normalize video to target resolution and 30fps
+            v = in_file.video.filter('scale', target_width, target_height, force_original_aspect_ratio='decrease') \
+                             .filter('pad', target_width, target_height, '(ow-iw)/2', '(oh-ih)/2') \
                              .filter('setsar', 1) \
-                             .filter('fps', fps=30, round='near')
+                             .filter('fps', fps=30, round='near') \
+                             .filter('format', 'yuv420p')
             
             if has_audio(vid):
-                a = in_file.audio.filter('aresample', 44100)
+                a = in_file.audio.filter('aformat', sample_rates='44100', channel_layouts='stereo')
             else:
                 dur = get_duration(vid)
                 a = ffmpeg.input('anullsrc=r=44100:cl=stereo', format='lavfi', t=dur).audio
@@ -111,15 +126,62 @@ def run(job_path):
             v_stream = streams[0]
             a_stream = streams[1]
         else:
-            joined = ffmpeg.concat(*streams, v=1, a=1)
-            v_stream = joined.video
-            a_stream = joined.audio
+            # Tách riêng concat video và audio để tránh lỗi ffmpeg-python "multiple outgoing edges"
+            v_streams = [s for i, s in enumerate(streams) if i % 2 == 0]
+            a_streams = [s for i, s in enumerate(streams) if i % 2 == 1]
+            v_stream = ffmpeg.concat(*v_streams, v=1, a=0)
+            a_stream = ffmpeg.concat(*a_streams, v=0, a=1)
         
         if has_subs:
             rel_srt = os.path.relpath(srt_path).replace('\\', '/')
-            # Adding black outline for better visibility
-            style = "Fontsize=24,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1"
+            # Adding black outline for better visibility, smaller font for 9:16 vertical videos
+            style = "Fontsize=13,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1"
             v_stream = v_stream.filter('subtitles', rel_srt, force_style=style)
+            
+        # Luôn luôn hiển thị chữ TẬP PHIM và dải băng màu cam
+        font_path = "C:/Windows/Fonts/arialbd.ttf"
+        
+        # Line 1: TẬP PHIM
+        v_stream = v_stream.filter(
+            'drawtext',
+            text='TẬP PHIM',
+            fontfile=font_path,
+            fontcolor='white',
+            fontsize=60,
+            bordercolor='black',
+            borderw=4,
+            x='(w-text_w)/2',
+            y='h/6',
+            enable='between(t,0,5)'
+        )
+        
+        # Dòng phân cách màu cam ở GIỮA 2 DÒNG (Dài vừa phải)
+        v_stream = v_stream.filter(
+            'drawbox',
+            x='(iw-300)/2',
+            y='ih/6+90',
+            width=300,
+            height=8,
+            color='#FFB000',
+            t='fill',
+            enable='between(t,0,5)'
+        )
+        
+        # Line 2: Actual Title (Tên tập phim thực tế - Nhỏ lại để không bị tràn màn hình)
+        if video_title:
+            escaped_title = video_title.replace("'", "\\\\'").upper()
+            v_stream = v_stream.filter(
+                'drawtext',
+                text=escaped_title,
+                fontfile=font_path,
+                fontcolor='white',
+                fontsize=35,
+                bordercolor='black',
+                borderw=3,
+                x='(w-text_w)/2',
+                y='h/6+110',
+                enable='between(t,0,5)'
+            )
             
         if bgm_url:
             bgm = ffmpeg.input(bgm_url).audio.filter('volume', '0.3').filter('aresample', 44100)

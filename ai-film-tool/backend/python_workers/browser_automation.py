@@ -421,20 +421,23 @@ def choose_video_settings(page: Page, job: Dict[str, Any], debug: FlowDebug) -> 
 
     # Chọn Model
     if model:
-        try:
-            # Dropdown chọn model trong menu Quick Settings luôn là dropdown cuối cùng
-            dropdowns = page.locator('button[aria-haspopup="menu"]')
-            if dropdowns.count() > 0:
-                dropdowns.last.click()
-                page.wait_for_timeout(500)
-                
-                # Tìm thẻ menuitem có chứa tên model
-                model_item = page.locator('[role="menuitem"]', has_text=model).first
-                if visible_first(model_item, 1000):
-                    model_item.click()
+        dropdowns = page.locator('button[aria-haspopup="menu"]')
+        for i in range(dropdowns.count()):
+            try:
+                text_content = dropdowns.nth(i).text_content()
+                if text_content and ("Veo" in text_content or "Omni" in text_content or "Luma" in text_content or "Kling" in text_content or "Sora" in text_content or "Gen" in text_content):
+                    dropdowns.nth(i).click()
                     page.wait_for_timeout(500)
-        except Exception:
-            pass
+                    
+                    # Tìm thẻ menuitem có chứa tên model
+                    model_item = page.locator('[role="menuitem"]', has_text=model).first
+                    if visible_first(model_item, 1000):
+                        model_item.click()
+                        page.wait_for_timeout(1000)
+                        debug.log(f"[BOT] ✅ Đã chọn Model {model}.")
+                    break
+            except Exception:
+                pass
 
 
 
@@ -536,11 +539,11 @@ def locator_score(locator: Locator) -> float:
     if not box:
         return -1.0
 
-    if any(blocked in text for blocked in ["search", "filter", "email", "password", "project name"]):
+    if any(blocked in text for blocked in ["search", "tìm kiếm", "tìm", "filter", "lọc", "email", "password", "project name"]):
         return -1.0
 
     score = float(box["width"] * box["height"]) + float(box["y"] * 2)
-    if any(word in text for word in ["prompt", "describe", "ask", "create", "type", "message"]):
+    if any(word in text for word in ["prompt", "câu lệnh", "describe", "mô tả", "ask", "create", "tạo", "type", "nhập", "message"]):
         score += 100000.0
     if box["height"] < 20 or box["width"] < 120:
         score -= 10000.0
@@ -670,7 +673,7 @@ def uploaded_asset_locator(page: Page, filename: str) -> Optional[Locator]:
     return None
 
 
-def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug) -> int:
+def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug, upload_mode: str = "Thành phần") -> int:
     if not files:
         return 0
 
@@ -701,14 +704,43 @@ def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug
         # Đếm số ảnh đã attach TRƯỚC khi upload
         count_before = page.evaluate(COUNT_ATTACHED_JS)
 
-        # ── Bước 1: Mở menu [+] ──
-        add_btn = page.locator('button', has=page.locator('i', has_text="add_2")).first
-        if visible_first(add_btn, 2000):
-            add_btn.click()
-            page.wait_for_timeout(1500)
+        # ── Bước 1: Mở menu [+] hoặc Bắt đầu ──
+        if upload_mode == "Khung hình":
+            dropdown = page.locator('button[role="combobox"]').first
+            if visible_first(dropdown, 1000):
+                dropdown.click(force=True)
+                page.wait_for_timeout(500)
+                option = page.locator('div[role="option"], span', has_text="Frames to Video").first
+                if visible_first(option, 1000):
+                    option.click(force=True)
+                    debug.log("[BOT] Đã chọn 'Frames to Video'.")
+                    page.wait_for_timeout(500)
+                    
+            bat_dau_btn = page.locator('div[type="button"], button', has_text="Bắt đầu").first
+            if visible_first(bat_dau_btn, 2000):
+                bat_dau_btn.click(force=True)
+                debug.log("[BOT] Đã click 'Bắt đầu' để mở dialog.")
+                page.wait_for_timeout(1500)
+            else:
+                debug.log("[BOT] ⚠️ Không tìm thấy nút 'Bắt đầu', thử nút [+]...")
+                add_btn = page.locator('button', has=page.locator('i', has_text="add_2")).first
+                if visible_first(add_btn, 2000):
+                    add_btn.click()
+                page.wait_for_timeout(1500)
         else:
-            click_near_prompt_button(page, prompt, ["upload", "attach", "add", "image", "media", "asset", "+"])
-            page.wait_for_timeout(1500)
+            tab_thanh_phan = page.locator('button[role="tab"]', has_text="Thành phần").first
+            if visible_first(tab_thanh_phan, 2000):
+                tab_thanh_phan.click(force=True)
+                debug.log("[BOT] Đã click tab 'Thành phần'.")
+                page.wait_for_timeout(1000)
+                
+            add_btn = page.locator('button', has=page.locator('i', has_text="add_2")).first
+            if visible_first(add_btn, 2000):
+                add_btn.click()
+                page.wait_for_timeout(1500)
+            else:
+                click_near_prompt_button(page, prompt, ["upload", "attach", "add", "image", "media", "asset", "+"])
+                page.wait_for_timeout(1500)
 
         # ── Bước 2: Upload file qua input[type=file] ──
         inputs = page.locator('input[type="file"]')
@@ -872,22 +904,32 @@ def submit_prompt(page: Page, prompt_input: Locator, debug: FlowDebug) -> None:
             page.wait_for_timeout(3000)
             return
 
-    # Tìm nút Submit nằm GẦN NHẤT so với ô nhập prompt
-    # Loại bỏ keyword "arrow" vì sẽ bị nhầm với "arrow_drop_down" của thẻ chọn Model
-    # Thêm đích danh "arrow_forward" và "tạo"
-    clicked = click_near_prompt_button(page, prompt_input, [
-        "tạo", "create", "generate", "submit", "send", "arrow_forward", "go", "start", "run", "make"
-    ])
+    # Tìm nút submit chính xác dựa trên cấu trúc DOM của Google Flow
+    # Nút có chứa icon "arrow_forward" hoặc chữ "Tạo" bị ẩn
+    flow_selectors = [
+        'button:has(i:text-is("arrow_forward"))',
+        'button:has(span:text-is("Tạo"))',
+        'button:has(i:text-is("send"))'
+    ]
     
-    if clicked:
-        debug.log("clicked composer submit button (Near Prompt Match)")
-        page.wait_for_timeout(3000)
-        return
+    # Ưu tiên các nút nằm dưới cùng của trang (gần khung chat nhất)
+    for selector in flow_selectors:
+        try:
+            btn = page.locator(selector).last
+            if visible_first(btn, 500):
+                btn.click(timeout=2000)
+                debug.log(f"clicked submit button via selector: {selector}")
+                page.wait_for_timeout(3000)
+                return
+        except Exception:
+            continue
 
-    page.keyboard.press("Control+Enter")
-    page.wait_for_timeout(1000)
+    # Fallback ấn Enter nếu không tìm thấy nút
+    debug.log("[BOT] ⚠️ Không tìm thấy nút Tạo, thử ấn Enter trên bàn phím...")
+    prompt_input.focus()
+    page.wait_for_timeout(300)
     page.keyboard.press("Enter")
-    debug.log("submitted prompt with keyboard")
+    debug.log("submitted prompt with Enter keyboard")
     page.wait_for_timeout(3000)
 
 
@@ -1029,6 +1071,17 @@ def run_generation_step(
     output_path: Path,
     use_latest_gallery_image: bool = False,
 ) -> Path:
+    if media_type == "image":
+        upload_mode = "Thành phần"
+    else:
+        upload_mode = str(job.get("mode") or job.get("videoMode") or "Khung hình")
+
+    debug.log(f"[BOT] ⚙️ Mở Tab {upload_mode} trên giao diện chính...")
+    tab_locator = page.locator('button[role="tab"]', has_text=upload_mode).first
+    if visible_first(tab_locator, 2000):
+        tab_locator.click(force=True)
+        page.wait_for_timeout(1000)
+
     debug.log(f"[BOT] ⚙️ Đang cấu hình cài đặt cho {media_type}...")
     if media_type == "image":
         choose_image_settings(page, job, debug)
@@ -1039,14 +1092,41 @@ def run_generation_step(
     
     if use_latest_gallery_image:
         debug.log("[BOT] 🖼️ Sử dụng ảnh vừa tạo trong thư viện thay vì upload lại...")
-        # Luôn CLICK để đảm bảo mở menu [+]
-        add_btn = page.locator("button", has=page.locator("i", has_text="add_2")).first
-        if visible_first(add_btn, 2000):
-            add_btn.click()
-            page.wait_for_timeout(1500)
+        if upload_mode == "Khung hình":
+            dropdown = page.locator('button[role="combobox"]').first
+            if visible_first(dropdown, 1000):
+                dropdown.click(force=True)
+                page.wait_for_timeout(500)
+                option = page.locator('div[role="option"], span', has_text="Frames to Video").first
+                if visible_first(option, 1000):
+                    option.click(force=True)
+                    debug.log("[BOT] Đã chọn 'Frames to Video'.")
+                    page.wait_for_timeout(500)
+                    
+            bat_dau_btn = page.locator('div[type="button"], button', has_text="Bắt đầu").first
+            if visible_first(bat_dau_btn, 2000):
+                bat_dau_btn.click(force=True)
+                debug.log("[BOT] Đã click 'Bắt đầu' để mở dialog.")
+                page.wait_for_timeout(1500)
+            else:
+                add_btn = page.locator("button", has=page.locator("i", has_text="add_2")).first
+                if visible_first(add_btn, 2000):
+                    add_btn.click()
+                page.wait_for_timeout(1500)
         else:
-            click_near_prompt_button(page, prompt_input, ["upload", "attach", "add", "image", "media", "asset", "+"])
-            page.wait_for_timeout(1500)
+            tab_thanh_phan = page.locator('button[role="tab"]', has_text="Thành phần").first
+            if visible_first(tab_thanh_phan, 2000):
+                tab_thanh_phan.click(force=True)
+                debug.log("[BOT] Đã click tab 'Thành phần'.")
+                page.wait_for_timeout(1000)
+                
+            add_btn = page.locator("button", has=page.locator("i", has_text="add_2")).first
+            if visible_first(add_btn, 2000):
+                add_btn.click()
+                page.wait_for_timeout(1500)
+            else:
+                click_near_prompt_button(page, prompt_input, ["upload", "attach", "add", "image", "media", "asset", "+"])
+                page.wait_for_timeout(1500)
             
         # Chọn ảnh đầu tiên trong thư viện (ảnh mới nhất)
         # Giới hạn vùng tìm kiếm trong popup/dialog vừa mở ra để tránh click nhầm ảnh ngoài nền
@@ -1073,7 +1153,7 @@ def run_generation_step(
             debug.log("[BOT] ✅ Đã thêm ảnh từ thư viện vào câu lệnh.")
             page.wait_for_timeout(1000)
     else:
-        upload_files(page, prompt_input, upload_paths, debug)
+        upload_files(page, prompt_input, upload_paths, debug, upload_mode)
         if upload_paths:
             debug.log("[BOT] ⏳ Đang chờ hệ thống xử lý ảnh vừa upload...")
             page.wait_for_timeout(15000)
@@ -1120,11 +1200,11 @@ def run_generation_step(
     except Exception:
         pass
 
-    debug.log("[BOT] ⏳ Chờ thêm 15s cho UI ổn định...")
-    page.wait_for_timeout(15000)
+    debug.log("[BOT] ⏳ Chờ thêm 5s cho UI ổn định...")
+    page.wait_for_timeout(5000)
 
     try:
-        # Chờ ảnh MỚI có alt="Hình ảnh được tạo" xuất hiện (không trùng UUID trong baseline)
+        # Chờ ảnh/video MỚI xuất hiện (không trùng UUID trong baseline)
         timeout_seconds = 30 * 60 if media_type == "video" else 10 * 60
         deadline = time.time() + timeout_seconds
         target_img = None
@@ -1138,11 +1218,13 @@ def run_generation_step(
             for i in range(generated_media.count()):
                 media_el = generated_media.nth(i)
                 try:
-                    if not media_el.is_visible(timeout=500):
-                        continue
-                    box = media_el.bounding_box()
-                    if not box or box["width"] < 100 or box["height"] < 100:
-                        continue
+                    # Bỏ qua kiểm tra is_visible và bounding_box khắt khe đối với video vì video mới sinh có thể chưa có kích thước hoặc bị che
+                    if media_type != "video":
+                        if not media_el.is_visible(timeout=500):
+                            continue
+                        box = media_el.bounding_box()
+                        if not box or box["width"] < 50 or box["height"] < 50:
+                            continue
                     
                     src = media_el.evaluate("el => el.currentSrc || el.src || ''")
                     if not src:
@@ -1151,7 +1233,7 @@ def run_generation_step(
                         if not src:
                             continue
                         
-                    # Lấy UUID từ src để so sánh chính xác (bỏ qua query width/height nếu có)
+                    # Lấy UUID từ src để so sánh chính xác
                     identifier = src
                     try:
                         from urllib.parse import urlparse, parse_qs
@@ -1162,44 +1244,75 @@ def run_generation_step(
                     except Exception:
                         pass
 
-                    # CHỈ chọn nếu media này chưa từng xuất hiện trước khi submit
-                    if src not in baseline_media and identifier not in baseline_media:
+                    # Kiểm tra xem media này đã có trong baseline (danh sách cũ) chưa
+                    is_new = True
+                    for b_item in baseline_media:
+                        if src in b_item or identifier in b_item:
+                            is_new = False
+                            break
+
+                    # CHỈ chọn nếu media này là MỚI
+                    if is_new:
                         if media_type == "video":
-                            # Với video, readyState >= 3 có nghĩa là HAVE_FUTURE_DATA (đã tải đủ để phát)
-                            is_complete = media_el.evaluate("el => el.readyState >= 3 || el.src.startsWith('blob:')")
+                            # readyState >= 1 (HAVE_METADATA) là đủ - bot tải video từ URL, không cần browser buffer
+                            video_info = media_el.evaluate("""el => ({
+                                readyState: el.readyState,
+                                src: (el.currentSrc || el.src || '').substring(0, 80),
+                                duration: el.duration,
+                                hasSrc: !!(el.currentSrc || el.src)
+                            })""")
+                            debug.log(f"[BOT] 🔍 Video mới: readyState={video_info.get('readyState')}, duration={video_info.get('duration')}, src={video_info.get('src')}")
+                            
+                            # DI CHUỘT VÀO VIDEO ĐỂ KÍCH HOẠT TẢI: Flow thường yêu cầu hover/play để bắt đầu stream video
+                            if video_info.get('hasSrc', False):
+                                try:
+                                    # 1. Dùng JS để ép phát video (cách hiệu quả nhất để ép trình duyệt buffer)
+                                    media_el.evaluate("el => { el.muted = true; el.play().catch(() => {}); el.dispatchEvent(new MouseEvent('mouseenter', {bubbles: true})); }")
+                                    # 2. Hover bằng Playwright với force=True và lệch góc trái để tránh icon Play chặn ở giữa
+                                    media_el.scroll_into_view_if_needed(timeout=1000)
+                                    media_el.hover(force=True, position={"x": 5, "y": 5}, timeout=1000)
+                                except Exception:
+                                    pass
+
+                            is_complete = video_info.get('hasSrc', False) and (
+                                video_info.get('readyState', 0) >= 1
+                                or str(src).startswith('blob:')
+                            )
                         else:
                             is_complete = media_el.evaluate("el => el.complete === true && el.naturalWidth > 0")
                             
                         if is_complete:
                             target_img = media_el
                             break
+                        else:
+                            debug.log(f"[BOT] ⏳ Video có src nhưng readyState={video_info.get('readyState', '?')}, chờ thêm...")
                 except Exception:
                     continue
 
             if target_img:
-                debug.log(f"[BOT] ⏳ Đã tìm thấy {media_type} mới do AI tạo ra, chờ thêm 5s để render 100%...")
+                debug.log(f"[BOT] ⏳ Đã tìm thấy {media_type} mới do AI tạo ra, chờ thêm 5s để ổn định...")
+                if media_type == "video":
+                    try:
+                        debug.log("[BOT] 🖱️ Đang ép video tải (Play/Hover force=True)...")
+                        target_img.evaluate("el => { el.muted = true; el.play().catch(() => {}); }")
+                        target_img.scroll_into_view_if_needed(timeout=1000)
+                        target_img.hover(force=True, position={"x": 5, "y": 5}, timeout=2000)
+                    except Exception as e:
+                        debug.log(f"[BOT] ⚠️ Không thể ép tải video: {e}")
+                
                 page.wait_for_timeout(5000)
                 break
 
-            # Tự động bấm "Thử lại" nếu bị lỗi "Không thành công" (vi phạm chính sách)
-            retry_btn = page.locator('button', has=page.locator('i', has_text="refresh")).filter(has_text=re.compile(r"Thử lại|Retry", re.I)).last
-            if visible_first(retry_btn, 500):
-                debug.log(f"[BOT] ⚠️ Bị từ chối do vi phạm chính sách hoặc lỗi. Đang tự động ấn 'Thử lại' để tạo lại {media_type}...")
-                try:
-                    retry_btn.click(timeout=3000)
-                    page.wait_for_timeout(5000)
-                    deadline = time.time() + timeout_seconds # Reset lại thời gian chờ
-                    continue
-                except Exception as e:
-                    debug.log(f"[BOT] ⚠️ Lỗi khi ấn Thử lại: {e}")
+            # Đã bỏ logic tự động ấn "Thử lại" (Retry) vì nó bị nhầm lẫn với nút "Tạo lại" của các ảnh/video cũ trên trang,
+            # dẫn đến việc bot liên tục ấn tạo lại thay vì chờ tải video.
 
-            # Kiểm tra lỗi (Soft check để tránh False Positive)
-            blocked = page.get_by_text(re.compile(r"failed|error|policy|violat|could not|try again|không thành công|vi phạm", re.I))
-            if visible_first(blocked, 300):
-                # Không raise ngay lập tức, chỉ cảnh báo để tránh bắt nhầm text trên UI (ví dụ: nút "Báo lỗi")
-                debug.log("[BOT] ⚠️ Cảnh báo: Phát hiện text nghi ngờ lỗi trên UI, nhưng vẫn tiếp tục chờ...")
+            # Log debug số lượng video trên trang
+            if media_type == "video":
+                total_videos = page.locator('video').count()
+                if total_videos > 0:
+                    debug.log(f"[BOT] 🔍 Trang có {total_videos} video, baseline có {len(baseline_media)} identifiers")
 
-            page.wait_for_timeout(5000)
+            page.wait_for_timeout(3000)
 
         if not target_img:
             debug.screenshot(page, "media_timeout")
@@ -1211,15 +1324,20 @@ def run_generation_step(
         debug.log(f"[BOT] 🔗 src URL: {src[:120]}...")
 
         downloaded = False
+        full_url = ""
 
-        # Phương pháp 1: Tải qua Playwright API request (giữ cookie xác thực)
         if src:
             full_url = src if src.startswith("http") else (page.evaluate("window.location.origin") + src)
+            debug.log(f"[BOT] 🔗 Full URL: {full_url[:150]}")
+
+        # Phương pháp 1: Tải qua Playwright API request (giữ cookie xác thực)
+        if full_url:
             try:
                 response = page.context.request.get(full_url)
                 if response.ok:
                     body = response.body()
                     content_type = response.headers.get("content-type", "")
+                    debug.log(f"[BOT] API response: content-type={content_type}, size={len(body)} bytes")
                     if "image" in content_type or "video" in content_type or len(body) > 10000:
                         output_path.write_bytes(body)
                         debug.log(f"[BOT] 💾 Đã tải {media_type} thành công (content-type: {content_type}, size: {len(body)} bytes).")
@@ -1231,9 +1349,50 @@ def run_generation_step(
             except Exception as e:
                 debug.log(f"[BOT] ⚠️ Lỗi API request: {e}")
 
-        # Phương pháp 2: Fetch Blob trực tiếp trong trình duyệt (Chuyên trị Video và lỗi Redirect/CORS)
-        if not downloaded and src:
-            debug.log(f"[BOT] ⚠️ Thử tải qua trình duyệt (fetch blob)...")
+        # Phương pháp 2: Click nút Download trên giao diện Google Flow (nếu có)
+        if not downloaded:
+            debug.log(f"[BOT] ⚠️ Thử tìm nút download gần {media_type}...")
+            try:
+                if try_download_near_media(page, target_img, output_path, debug):
+                    if output_path.exists() and output_path.stat().st_size > 1000:
+                        debug.log(f"[BOT] 💾 Đã tải {media_type} qua nút download ({output_path.stat().st_size} bytes).")
+                        downloaded = True
+                    else:
+                        debug.log(f"[BOT] ⚠️ Nút download click nhưng file rỗng hoặc quá nhỏ.")
+                else:
+                    debug.log(f"[BOT] ⚠️ Không tìm thấy nút download hoặc click thất bại.")
+            except Exception as e:
+                debug.log(f"[BOT] ⚠️ Lỗi khi thử nút download: {e}")
+
+        # Phương pháp 3: Download bằng Python urllib với cookies từ browser
+        if not downloaded and full_url:
+            debug.log(f"[BOT] ⚠️ Thử tải bằng urllib với cookies...")
+            try:
+                cookies = page.context.cookies()
+                cookie_header = "; ".join([f"{c['name']}={c['value']}" for c in cookies])
+                user_agent = page.evaluate("navigator.userAgent")
+
+                req = urllib.request.Request(full_url)
+                req.add_header("Cookie", cookie_header)
+                req.add_header("User-Agent", user_agent)
+                req.add_header("Referer", page.url)
+
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    data = resp.read()
+                    resp_type = resp.headers.get("Content-Type", "")
+                    debug.log(f"[BOT] urllib response: content-type={resp_type}, size={len(data)} bytes")
+                    if len(data) > 1000:
+                        output_path.write_bytes(data)
+                        debug.log(f"[BOT] 💾 Đã tải {media_type} qua urllib ({len(data)} bytes).")
+                        downloaded = True
+                    else:
+                        debug.log(f"[BOT] ⚠️ urllib response quá nhỏ ({len(data)} bytes).")
+            except Exception as e:
+                debug.log(f"[BOT] ⚠️ Lỗi urllib: {e}")
+
+        # Phương pháp 4: Fetch Blob base64 trong trình duyệt (chậm nhưng ổn định nhất cho video)
+        if not downloaded and full_url:
+            debug.log(f"[BOT] ⚠️ Thử tải qua fetch base64 (phương pháp cuối)...")
             try:
                 data_url = page.evaluate("""
                 async (url) => {
@@ -1248,16 +1407,15 @@ def run_generation_step(
                     });
                 }
                 """, full_url)
-                
+
                 if data_url and "," in data_url:
-                    import base64
                     header, b64data = data_url.split(",", 1)
                     output_path.write_bytes(base64.b64decode(b64data))
                     if output_path.stat().st_size > 1000:
-                        debug.log(f"[BOT] 💾 Đã lưu {media_type} qua fetch blob ({output_path.stat().st_size} bytes).")
+                        debug.log(f"[BOT] 💾 Đã lưu {media_type} qua fetch base64 ({output_path.stat().st_size} bytes).")
                         downloaded = True
             except Exception as e:
-                debug.log(f"[BOT] ⚠️ Lỗi fetch blob: {e}")
+                debug.log(f"[BOT] ⚠️ Lỗi fetch base64: {e}")
 
         # Phương pháp 3: Canvas toDataURL (Fallback cuối cùng cho Image, không dùng được cho Video mp4)
         if not downloaded and media_type != "video":

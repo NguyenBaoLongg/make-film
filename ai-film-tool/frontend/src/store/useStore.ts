@@ -452,12 +452,13 @@ async function createFlowScene(params: {
   }, params.sceneIndex);
 }
 
-async function concatVideos(videoUrls: string[], filePrefix: string, bgmUrl?: string, autoSubtitles?: boolean) {
+async function concatVideos(videoUrls: string[], filePrefix: string, bgmUrl?: string, autoSubtitles?: boolean, videoTitle?: string) {
   return apiPost<GenerateResponse>('/api/generate/concat-videos', {
     videoUrls,
     bgmUrl,
     autoSubtitles,
     filePrefix,
+    videoTitle,
   });
 }
 
@@ -773,7 +774,7 @@ export const useStore = create<AppState>((set, get) => ({
 
         get().updateNodeStatus(concatNode.id, 'processing');
         get().addPipelineLog(`Concat started: ${videoUrls.length} video(s).`);
-        const concatResult = await concatVideos(videoUrls, get().filePrefix, bgmUrl, autoSubtitles);
+        const concatResult = await concatVideos(videoUrls, get().filePrefix, bgmUrl, autoSubtitles, concatNode.data.topic as string | undefined);
 
         if (!concatResult.result_url) {
           throw new Error('Concat finished without a result URL');

@@ -55,7 +55,7 @@ export default function VideoGenNode({ id, data }: { id: string; data: any }) {
         {/* Result Video */}
         {data.resultUrl && data.status === 'completed' && (
           <div className="rounded-lg overflow-hidden border border-green-500/30 relative group">
-            <video src={data.resultUrl} controls className="w-full h-auto" />
+            <video src={data.resultUrl} controls preload="auto" className="w-full h-auto" />
             <button 
               onClick={handleDownload}
               className="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary"

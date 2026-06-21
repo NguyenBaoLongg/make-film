@@ -571,6 +571,7 @@ router.post('/concat-videos', async (req, res) => {
     bgmUrl,
     autoSubtitles,
     filePrefix = 'film',
+    videoTitle = '',
   } = req.body;
 
   if (!Array.isArray(videoUrls) || videoUrls.length === 0) {
@@ -599,12 +600,14 @@ router.post('/concat-videos', async (req, res) => {
     
     const jobId = safeRunId(crypto.randomUUID());
     const jobPath = path.join(jobsDir, `video-job-${jobId}.json`);
-    fs.writeFileSync(jobPath, JSON.stringify({
+    const jobPayload = {
       videoUrls: inputPaths,
       bgmUrl: resolvedBgmPath,
       auto_subtitles: Boolean(autoSubtitles),
-      output_path: outputPath
-    }, null, 2), 'utf8');
+      output_path: outputPath,
+      videoTitle: String(videoTitle)
+    };
+    fs.writeFileSync(jobPath, JSON.stringify(jobPayload, null, 2), 'utf8');
 
     let parsed = null;
     let lastError = '';
