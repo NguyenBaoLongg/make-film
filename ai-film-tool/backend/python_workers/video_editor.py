@@ -4,6 +4,9 @@ import json
 import uuid
 import ffmpeg
 import argparse
+import tempfile
+import urllib.request
+import urllib.error
 
 def format_time(seconds):
     hours = int(seconds // 3600)
@@ -17,8 +20,112 @@ def get_duration(video_path):
         probe = ffmpeg.probe(video_path)
         return float(probe['format']['duration'])
     except ffmpeg.Error as e:
-        print(f"Error probing {video_path}: {e.stderr.decode('utf8', errors='ignore')}", file=sys.stderr)
+        stderr_text = e.stderr.decode('utf8', errors='ignore') if e.stderr else 'unknown'
+        print(f"Error probing {video_path}: {stderr_text}", file=sys.stderr)
         raise
+
+def escape_drawtext(text):
+    """
+    Escape text cho FFmpeg drawtext filter.
+    FFmpeg drawtext cần escape: ' : \\ ; [ ] { }
+    Theo tài liệu ffmpeg, trong drawtext, dùng cú pháp escape 2 lớp:
+    - Level 1 (ffmpeg filter): \\ -> \\\\, ' -> \\', : -> \\:
+    - Level 2 (drawtext): tất cả special chars cần \\
+    
+    Với ffmpeg-python, nó tự handle 1 lớp escape, nên ta chỉ cần escape
+    cho drawtext level: ' -> '', : -> \\:, \\ -> \\\\
+    """
+    # ffmpeg-python sẽ tự wrap argument, nên ta chỉ cần escape cho drawtext parser
+    result = text
+    result = result.replace('\\', '\\\\')       # \ -> \\
+    result = result.replace("'", "'\\\\\\''")   # ' -> escaped form
+    result = result.replace(':', '\\:')         # : -> \:
+    result = result.replace(';', '\\;')         # ; -> \;
+    result = result.replace('%', '%%')          # % -> %% (drawtext dùng % cho time format)
+    return result
+
+def escape_subtitle_path(abs_path):
+    """
+    Escape đường dẫn file SRT cho subtitles filter trên Windows.
+    FFmpeg subtitles filter dùng libass, cần:
+    - Dùng forward slash thay backslash
+    - Escape dấu : (trong C:\\) thành \\:
+    - Escape dấu \\ thành /
+    - Escape dấu [ ] thành \\[ \\]
+    """
+    # Chuyển sang absolute path và dùng forward slash
+    normalized = abs_path.replace('\\', '/')
+    # Escape dấu : (ví dụ D:/... -> D\\:/...)
+    # Chỉ escape dấu : KHÔNG phải sau drive letter (libass cần thế)
+    # Thực ra cách an toàn nhất là escape TẤT CẢ dấu :
+    normalized = normalized.replace(':', '\\:')
+    # Escape brackets
+    normalized = normalized.replace('[', '\\[')
+    normalized = normalized.replace(']', '\\]')
+    return normalized
+
+def find_font():
+    """
+    Tìm font hỗ trợ tiếng Việt, thử nhiều font phổ biến trên Windows.
+    Trả về path đầu tiên tồn tại, hoặc None.
+    """
+    candidates = [
+        "C:/Windows/Fonts/arialbd.ttf",     # Arial Bold
+        "C:/Windows/Fonts/arial.ttf",        # Arial
+        "C:/Windows/Fonts/segoeui.ttf",      # Segoe UI
+        "C:/Windows/Fonts/tahoma.ttf",       # Tahoma
+        "C:/Windows/Fonts/verdana.ttf",      # Verdana
+        "C:/Windows/Fonts/calibri.ttf",      # Calibri
+        "C:/Windows/Fonts/times.ttf",        # Times New Roman
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    return None
+
+def download_to_temp(url, suffix='.audio', temp_dir=None):
+    """
+    Tải file từ URL HTTP/HTTPS về file tạm.
+    Trả về đường dẫn file tạm, hoặc None nếu thất bại.
+    """
+    try:
+        print(f"Downloading BGM: {url}", file=sys.stderr)
+        # Tạo file tạm trong cùng thư mục temp_dir
+        fd, temp_path = tempfile.mkstemp(suffix=suffix, dir=temp_dir)
+        os.close(fd)
+        
+        req = urllib.request.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) video-editor/1.0'
+        })
+        with urllib.request.urlopen(req, timeout=60) as response:
+            with open(temp_path, 'wb') as out_file:
+                while True:
+                    chunk = response.read(8192)
+                    if not chunk:
+                        break
+                    out_file.write(chunk)
+        
+        file_size = os.path.getsize(temp_path)
+        print(f"BGM downloaded: {file_size} bytes -> {temp_path}", file=sys.stderr)
+        
+        if file_size == 0:
+            os.remove(temp_path)
+            return None
+            
+        return temp_path
+    except (urllib.error.URLError, OSError, TimeoutError) as e:
+        print(f"Warning: Could not download BGM from {url}: {e}", file=sys.stderr)
+        if 'temp_path' in locals() and os.path.exists(temp_path):
+            os.remove(temp_path)
+        return None
+
+def has_audio(path):
+    """Kiểm tra file video có audio stream hay không."""
+    try:
+        probe = ffmpeg.probe(path)
+        return any(stream.get('codec_type') == 'audio' for stream in probe.get('streams', []))
+    except Exception:
+        return False
 
 def run(job_path):
     with open(job_path, 'r', encoding='utf-8') as f:
@@ -35,21 +142,37 @@ def run(job_path):
     if not output_path:
         return {"status": "error", "message": "No output path provided."}
 
-    srt_path = os.path.join(os.path.dirname(job_path), f"sub-{uuid.uuid4().hex}.srt")
-    temp_wav_path = os.path.join(os.path.dirname(job_path), f"audio-{uuid.uuid4().hex}.wav")
+    # Kiểm tra tất cả video input tồn tại
+    for vid in video_urls:
+        if not os.path.isfile(vid):
+            return {"status": "error", "message": f"Video file not found: {vid}"}
+
+    temp_dir = os.path.dirname(job_path)
+    srt_path = os.path.join(temp_dir, f"sub-{uuid.uuid4().hex}.srt")
+    temp_wav_path = os.path.join(temp_dir, f"audio-{uuid.uuid4().hex}.wav")
+    temp_bgm_path = None  # Sẽ set nếu download BGM từ URL
     
     has_subs = False
     
-    def has_audio(path):
-        try:
-            probe = ffmpeg.probe(path)
-            return any(stream['codec_type'] == 'audio' for stream in probe['streams'])
-        except Exception:
-            return False
-    
     try:
+        # === BƯỚC 0: Xử lý BGM URL (download nếu là HTTP) ===
+        resolved_bgm_path = ''
+        if bgm_url:
+            if bgm_url.startswith('http://') or bgm_url.startswith('https://'):
+                # Download về local để tránh lỗi SSL/redirect/protocol
+                temp_bgm_path = download_to_temp(bgm_url, suffix='.ogg', temp_dir=temp_dir)
+                if temp_bgm_path:
+                    resolved_bgm_path = temp_bgm_path
+                else:
+                    print(f"Warning: BGM download failed, sẽ bỏ qua nhạc nền.", file=sys.stderr)
+            elif os.path.isfile(bgm_url):
+                resolved_bgm_path = bgm_url
+            else:
+                print(f"Warning: BGM file not found: {bgm_url}, sẽ bỏ qua.", file=sys.stderr)
+        
+        # === BƯỚC 1: Tạo phụ đề tự động (Whisper) ===
         if auto_subtitles:
-            # 1. Extract audio using concat filter
+            print("Extracting audio for subtitle generation...", file=sys.stderr)
             audio_streams = []
             for vid in video_urls:
                 in_file = ffmpeg.input(vid)
@@ -57,150 +180,219 @@ def run(job_path):
                     audio_streams.append(in_file.audio.filter('aresample', 16000))
                 else:
                     dur = get_duration(vid)
-                    audio_streams.append(ffmpeg.input(f'anullsrc=r=16000:cl=mono', format='lavfi', t=dur).audio)
+                    audio_streams.append(
+                        ffmpeg.input('anullsrc=r=16000:cl=mono', format='lavfi', t=str(dur)).audio
+                    )
             
             if len(audio_streams) == 1:
                 joined_audio = audio_streams[0]
             else:
                 joined_audio = ffmpeg.concat(*audio_streams, v=0, a=1)
-            ffmpeg.output(joined_audio, temp_wav_path, acodec='pcm_s16le', ac=1, ar=16000).run(overwrite_output=True, quiet=True)
             
-            # 2. Run Whisper to transcribe
-            import whisper
-            from whisper.utils import get_writer
-            
-            print("Loading Whisper model and transcribing...", file=sys.stderr)
-            # Đổi sang model 'medium' siêu xịn và lưu thẳng vào ổ D để không bị đầy ổ C
-            models_dir = os.path.join(os.path.dirname(__file__), "whisper_models")
-            os.makedirs(models_dir, exist_ok=True)
-            model = whisper.load_model("medium", download_root=models_dir)
-            result = model.transcribe(temp_wav_path, word_timestamps=True, language="vi")
-            
-            # 3. Write SRT file with TikTok-style short segments
-            writer = get_writer("srt", os.path.dirname(temp_wav_path))
-            writer_args = {
-                "max_line_width": 30, 
-                "max_line_count": 1, 
-                "highlight_words": False
-            }
-            writer(result, temp_wav_path, writer_args)
-            
-            srt_path = temp_wav_path.replace(".wav", ".srt")
-            if os.path.exists(srt_path):
-                has_subs = True
-                
-        # Probe first video to determine target resolution
-        target_width, target_height = 1920, 1080
-        if video_urls:
             try:
-                probe = ffmpeg.probe(video_urls[0])
-                for stream in probe.get('streams', []):
-                    if stream.get('codec_type') == 'video':
-                        target_width = int(stream['width'])
-                        target_height = int(stream['height'])
-                        break
-            except Exception:
-                pass
+                ffmpeg.output(joined_audio, temp_wav_path, acodec='pcm_s16le', ac=1, ar=16000) \
+                    .run(overwrite_output=True, quiet=True)
+            except ffmpeg.Error as e:
+                stderr_text = e.stderr.decode('utf8', errors='ignore') if e.stderr else 'unknown'
+                print(f"Warning: Failed to extract audio for subtitles: {stderr_text}", file=sys.stderr)
+                # Tiếp tục mà không có phụ đề
+                auto_subtitles = False
+        
+        if auto_subtitles and os.path.isfile(temp_wav_path):
+            try:
+                import whisper
+                from whisper.utils import get_writer
+                
+                print("Loading Whisper model and transcribing...", file=sys.stderr)
+                # Lưu model vào ổ D để không bị đầy ổ C
+                models_dir = os.path.join(os.path.dirname(__file__), "whisper_models")
+                os.makedirs(models_dir, exist_ok=True)
+                model = whisper.load_model("medium", download_root=models_dir)
+                result = model.transcribe(temp_wav_path, word_timestamps=True, language="vi")
+                
+                # Write SRT file with TikTok-style short segments
+                writer = get_writer("srt", os.path.dirname(temp_wav_path))
+                writer_args = {
+                    "max_line_width": 30, 
+                    "max_line_count": 1, 
+                    "highlight_words": False
+                }
+                writer(result, temp_wav_path, writer_args)
+                
+                srt_path = temp_wav_path.replace(".wav", ".srt")
+                if os.path.exists(srt_path):
+                    has_subs = True
+                    print(f"Subtitles generated: {srt_path}", file=sys.stderr)
+            except ImportError:
+                print("Warning: Whisper not installed, skipping subtitles.", file=sys.stderr)
+            except Exception as e:
+                print(f"Warning: Whisper transcription failed: {e}, skipping subtitles.", file=sys.stderr)
+                
+        # === BƯỚC 2: Probe resolution từ video đầu tiên ===
+        target_width, target_height = 1920, 1080
+        try:
+            probe = ffmpeg.probe(video_urls[0])
+            for stream in probe.get('streams', []):
+                if stream.get('codec_type') == 'video':
+                    target_width = int(stream['width'])
+                    target_height = int(stream['height'])
+                    break
+        except Exception as e:
+            print(f"Warning: Could not probe resolution, using default {target_width}x{target_height}: {e}", file=sys.stderr)
 
-        # Build filter graph for final video
-        streams = []
+        # === BƯỚC 3: Build filter graph ===
+        print(f"Building filter graph: {len(video_urls)} video(s), target={target_width}x{target_height}", file=sys.stderr)
+        
+        v_inputs = []
+        a_inputs = []
         for vid in video_urls:
             in_file = ffmpeg.input(vid)
             # Normalize video to target resolution and 30fps
-            v = in_file.video.filter('scale', target_width, target_height, force_original_aspect_ratio='decrease') \
-                             .filter('pad', target_width, target_height, '(ow-iw)/2', '(oh-ih)/2') \
-                             .filter('setsar', 1) \
-                             .filter('fps', fps=30, round='near') \
-                             .filter('format', 'yuv420p')
+            v = in_file.video \
+                .filter('scale', target_width, target_height, force_original_aspect_ratio='decrease') \
+                .filter('pad', target_width, target_height, '(ow-iw)/2', '(oh-ih)/2') \
+                .filter('setsar', 1) \
+                .filter('fps', fps=30, round='near') \
+                .filter('format', 'yuv420p')
             
             if has_audio(vid):
                 a = in_file.audio.filter('aformat', sample_rates='44100', channel_layouts='stereo')
             else:
                 dur = get_duration(vid)
-                a = ffmpeg.input('anullsrc=r=44100:cl=stereo', format='lavfi', t=dur).audio
+                a = ffmpeg.input('anullsrc=r=44100:cl=stereo', format='lavfi', t=str(dur)).audio
                 
-            streams.append(v)
-            streams.append(a)
+            v_inputs.append(v)
+            a_inputs.append(a)
 
         if len(video_urls) == 1:
-            v_stream = streams[0]
-            a_stream = streams[1]
+            v_stream = v_inputs[0]
+            a_stream = a_inputs[0]
         else:
             # Tách riêng concat video và audio để tránh lỗi ffmpeg-python "multiple outgoing edges"
-            v_streams = [s for i, s in enumerate(streams) if i % 2 == 0]
-            a_streams = [s for i, s in enumerate(streams) if i % 2 == 1]
-            v_stream = ffmpeg.concat(*v_streams, v=1, a=0)
-            a_stream = ffmpeg.concat(*a_streams, v=0, a=1)
+            v_stream = ffmpeg.concat(*v_inputs, v=1, a=0)
+            a_stream = ffmpeg.concat(*a_inputs, v=0, a=1)
         
+        # === BƯỚC 4: Thêm subtitles ===
         if has_subs:
-            rel_srt = os.path.relpath(srt_path).replace('\\', '/')
+            # Dùng absolute path và escape đúng cách cho Windows
+            abs_srt = os.path.abspath(srt_path)
+            escaped_srt = escape_subtitle_path(abs_srt)
             # Adding black outline for better visibility, smaller font for 9:16 vertical videos
             style = "Fontsize=13,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1"
-            v_stream = v_stream.filter('subtitles', rel_srt, force_style=style)
+            try:
+                v_stream = v_stream.filter('subtitles', escaped_srt, force_style=style)
+                print(f"Subtitles filter added: {escaped_srt}", file=sys.stderr)
+            except Exception as e:
+                print(f"Warning: Failed to add subtitles filter: {e}", file=sys.stderr)
             
-        # Luôn luôn hiển thị chữ TẬP PHIM và dải băng màu cam
-        font_path = "C:/Windows/Fonts/arialbd.ttf"
-        
-        # Line 1: TẬP PHIM
-        v_stream = v_stream.filter(
-            'drawtext',
-            text='TẬP PHIM',
-            fontfile=font_path,
-            fontcolor='white',
-            fontsize=60,
-            bordercolor='black',
-            borderw=4,
-            x='(w-text_w)/2',
-            y='h/6',
-            enable='between(t,0,5)'
-        )
-        
-        # Dòng phân cách màu cam ở GIỮA 2 DÒNG (Dài vừa phải)
-        v_stream = v_stream.filter(
-            'drawbox',
-            x='(iw-300)/2',
-            y='ih/6+90',
-            width=300,
-            height=8,
-            color='#FFB000',
-            t='fill',
-            enable='between(t,0,5)'
-        )
-        
-        # Line 2: Actual Title (Tên tập phim thực tế - Nhỏ lại để không bị tràn màn hình)
-        if video_title:
-            escaped_title = video_title.replace("'", "\\\\'").upper()
+        # === BƯỚC 5: Thêm drawtext overlay (TẬP PHIM + title) ===
+        font_path = find_font()
+        if font_path:
+            print(f"Using font: {font_path}", file=sys.stderr)
+            
+            # Line 1: TẬP PHIM (text đơn giản, không có ký tự đặc biệt)
             v_stream = v_stream.filter(
                 'drawtext',
-                text=escaped_title,
+                text=escape_drawtext('TẬP PHIM'),
                 fontfile=font_path,
                 fontcolor='white',
-                fontsize=35,
+                fontsize=60,
                 bordercolor='black',
-                borderw=3,
+                borderw=4,
                 x='(w-text_w)/2',
-                y='h/6+110',
+                y='h/6',
                 enable='between(t,0,5)'
             )
             
-        if bgm_url:
-            bgm = ffmpeg.input(bgm_url).audio.filter('volume', '0.3').filter('aresample', 44100)
-            a_stream = ffmpeg.filter([a_stream, bgm], 'amix', inputs=2, duration='first')
+            # Dòng phân cách màu cam ở GIỮA 2 DÒNG
+            v_stream = v_stream.filter(
+                'drawbox',
+                x='(iw-300)/2',
+                y='ih/6+90',
+                width=300,
+                height=8,
+                color='#FFB000',
+                t='fill',
+                enable='between(t,0,5)'
+            )
             
-        out = ffmpeg.output(v_stream, a_stream, output_path, vcodec='libx264', acodec='aac', pix_fmt='yuv420p', movflags='+faststart')
+            # Line 2: Actual Title (Tên tập phim thực tế)
+            if video_title:
+                safe_title = escape_drawtext(video_title.upper())
+                print(f"Adding title overlay: {video_title} -> escaped: {safe_title}", file=sys.stderr)
+                v_stream = v_stream.filter(
+                    'drawtext',
+                    text=safe_title,
+                    fontfile=font_path,
+                    fontcolor='white',
+                    fontsize=35,
+                    bordercolor='black',
+                    borderw=3,
+                    x='(w-text_w)/2',
+                    y='h/6+110',
+                    enable='between(t,0,5)'
+                )
+        else:
+            print("Warning: No suitable font found, skipping text overlay.", file=sys.stderr)
+            
+        # === BƯỚC 6: Mix nhạc nền (BGM) ===
+        if resolved_bgm_path:
+            try:
+                print(f"Mixing BGM: {resolved_bgm_path}", file=sys.stderr)
+                bgm = ffmpeg.input(resolved_bgm_path).audio \
+                    .filter('volume', '0.3') \
+                    .filter('aformat', sample_rates='44100', channel_layouts='stereo')
+                a_stream = ffmpeg.filter([a_stream, bgm], 'amix', inputs=2, duration='first')
+            except Exception as e:
+                print(f"Warning: Failed to mix BGM: {e}, continuing without background music.", file=sys.stderr)
+            
+        # === BƯỚC 7: Render output ===
+        print(f"Rendering final video: {output_path}", file=sys.stderr)
+        out = ffmpeg.output(
+            v_stream, a_stream, output_path,
+            vcodec='libx264',
+            acodec='aac',
+            pix_fmt='yuv420p',
+            movflags='+faststart'
+        )
+        
+        # In ra ffmpeg command để debug nếu cần
+        cmd = out.compile()
+        print(f"FFmpeg command: {' '.join(cmd)}", file=sys.stderr)
+        
         out.run(overwrite_output=True, capture_stdout=True, capture_stderr=True)
         
+        # Verify output
+        if not os.path.isfile(output_path):
+            return {"status": "error", "message": "FFmpeg completed but output file was not created."}
+        
+        output_size = os.path.getsize(output_path)
+        if output_size == 0:
+            return {"status": "error", "message": "FFmpeg created an empty output file."}
+            
+        print(f"Render completed: {output_path} ({output_size} bytes)", file=sys.stderr)
         return {"status": "success", "local_path": output_path}
         
     except ffmpeg.Error as e:
-        stderr_msg = e.stderr.decode('utf8', errors='ignore') if e.stderr else "Unknown ffmpeg error"
-        return {"status": "error", "message": stderr_msg}
+        stderr_msg = "Unknown ffmpeg error"
+        if e.stderr:
+            stderr_msg = e.stderr.decode('utf8', errors='ignore')
+        elif e.stdout:
+            stderr_msg = e.stdout.decode('utf8', errors='ignore')
+        print(f"FFmpeg Error: {stderr_msg}", file=sys.stderr)
+        return {"status": "error", "message": f"FFmpeg failed: {stderr_msg[-2000:]}"}
+    except Exception as e:
+        # Bắt mọi exception khác (FileNotFoundError, PermissionError, etc.)
+        print(f"Unexpected error: {type(e).__name__}: {e}", file=sys.stderr)
+        return {"status": "error", "message": f"{type(e).__name__}: {e}"}
     finally:
-        # Cleanup
-        if os.path.exists(srt_path):
-            os.remove(srt_path)
-        if os.path.exists(temp_wav_path):
-            os.remove(temp_wav_path)
+        # Cleanup tất cả temp files
+        for temp_file in [srt_path, temp_wav_path, temp_bgm_path]:
+            if temp_file and os.path.exists(temp_file):
+                try:
+                    os.remove(temp_file)
+                except OSError:
+                    pass
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

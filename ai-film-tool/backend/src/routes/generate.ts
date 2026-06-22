@@ -617,23 +617,37 @@ router.post('/concat-videos', async (req, res) => {
       console.log(`[Video Editor] ${candidate.command} ${args.join(' ')}`);
       try {
         const result = await runProcess(candidate.command, args);
+        
+        // Log stderr luôn để debug (bao gồm cả khi success)
+        if (result.stderr) {
+          console.log(`[Video Editor stderr] ${result.stderr.slice(-2000)}`);
+        }
+        
         if (result.code !== 0) {
-           lastError = result.stderr || result.stdout;
+           lastError = result.stderr || result.stdout || `Python exited with code ${result.code}`;
+           console.error(`[Video Editor] failed with code ${result.code}: ${lastError.slice(-500)}`);
            continue;
         }
-        parsed = parseWorkerJson(result.stdout);
+        parsed = result.stdout.trim() ? parseWorkerJson(result.stdout) : null;
+        if (!parsed) {
+           lastError = 'Python worker produced no JSON output';
+           continue;
+        }
         if (parsed.status === 'error') {
-           lastError = parsed.message;
+           lastError = parsed.message || 'Unknown video editor error';
            continue;
         }
         break; // Success
       } catch (err: any) {
         lastError = err.message;
+        console.error(`[Video Editor] exception: ${lastError}`);
       }
     }
 
     if (!parsed || parsed.status === 'error') {
-       throw new Error(`Video editor failed: ${lastError}`);
+       // Truncate để tránh response quá lớn
+       const truncated = lastError.length > 1000 ? lastError.slice(-1000) : lastError;
+       throw new Error(`Video editor failed: ${truncated}`);
     }
 
     res.json({

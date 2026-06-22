@@ -1,10 +1,3 @@
-"""
-Google Flow browser worker.
-
-This worker is intentionally conservative. It opens Flow, finds the main
-composer, uploads files into that composer, submits the prompt, waits for new
-media that did not exist before generation, then saves it locally.
-"""
 import argparse
 import base64
 import hashlib
@@ -18,7 +11,6 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-# Đảm bảo in UTF-8 không bị lỗi trên Windows Terminal
 if sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 if sys.stderr.encoding.lower() != 'utf-8':

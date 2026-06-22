@@ -20,11 +20,12 @@ def main():
         "videoUrls": [vid_path],
         "bgmUrl": "",
         "auto_subtitles": True,
-        "output_path": out_path
+        "output_path": out_path,
+        "videoTitle": ""
     }
     
     with open(job_path, 'w', encoding='utf-8') as f:
-        json.dump(job_data, f, indent=2)
+        json.dump(job_data, f, indent=2, ensure_ascii=False)
         
     print("Đang chạy Whisper Medium (dùng ổ D) để xuất phụ đề chính xác 100%...")
     result = run(job_path)
@@ -37,3 +38,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
