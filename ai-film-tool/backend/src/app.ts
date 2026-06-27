@@ -5,7 +5,8 @@ import { requireAuth } from './middleware/authMiddleware';
 import projectRoutes from './routes/projects';
 import generateRoutes from './routes/generate';
 import chromeRoutes from './routes/chrome';
-// import assetRoutes from './routes/assets';
+import filmPlanRoutes from './routes/film-plan';
+import extractFrameRoutes from './routes/extract-frame';
 
 const app = express();
 
@@ -20,6 +21,8 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/projects', requireAuth, projectRoutes);
+app.use('/api/generate/film-plan', requireAuth, filmPlanRoutes);
+app.use('/api/generate/extract-frame', requireAuth, extractFrameRoutes);
 app.use('/api/generate', requireAuth, generateRoutes);
 app.use('/api/chrome', requireAuth, chromeRoutes);
 // app.use('/api/assets', requireAuth, assetRoutes);

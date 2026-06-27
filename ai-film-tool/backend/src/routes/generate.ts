@@ -581,7 +581,7 @@ router.post('/concat-videos', async (req, res) => {
   try {
     ensureRuntimeDirs();
     const inputPaths = videoUrls.map((url) => resolveGeneratedUrlToPath(String(url)));
-    
+
     let resolvedBgmPath = '';
     if (bgmUrl && typeof bgmUrl === 'string') {
       if (bgmUrl.startsWith('http')) {
@@ -597,7 +597,7 @@ router.post('/concat-videos', async (req, res) => {
     }
 
     const outputPath = path.join(generatedDir, `${sanitizeFilePart(filePrefix)}_final_${Date.now()}.mp4`);
-    
+
     const jobId = safeRunId(crypto.randomUUID());
     const jobPath = path.join(jobsDir, `video-job-${jobId}.json`);
     const jobPayload = {
@@ -611,31 +611,31 @@ router.post('/concat-videos', async (req, res) => {
 
     let parsed = null;
     let lastError = '';
-    
+
     for (const candidate of getPythonCandidates()) {
       const args = [...candidate.argsPrefix, videoWorkerScript, '--job', jobPath];
       console.log(`[Video Editor] ${candidate.command} ${args.join(' ')}`);
       try {
         const result = await runProcess(candidate.command, args);
-        
+
         // Log stderr luôn để debug (bao gồm cả khi success)
         if (result.stderr) {
           console.log(`[Video Editor stderr] ${result.stderr.slice(-2000)}`);
         }
-        
+
         if (result.code !== 0) {
-           lastError = result.stderr || result.stdout || `Python exited with code ${result.code}`;
-           console.error(`[Video Editor] failed with code ${result.code}: ${lastError.slice(-500)}`);
-           continue;
+          lastError = result.stderr || result.stdout || `Python exited with code ${result.code}`;
+          console.error(`[Video Editor] failed with code ${result.code}: ${lastError.slice(-500)}`);
+          continue;
         }
         parsed = result.stdout.trim() ? parseWorkerJson(result.stdout) : null;
         if (!parsed) {
-           lastError = 'Python worker produced no JSON output';
-           continue;
+          lastError = 'Python worker produced no JSON output';
+          continue;
         }
         if (parsed.status === 'error') {
-           lastError = parsed.message || 'Unknown video editor error';
-           continue;
+          lastError = parsed.message || 'Unknown video editor error';
+          continue;
         }
         break; // Success
       } catch (err: any) {
@@ -645,9 +645,21 @@ router.post('/concat-videos', async (req, res) => {
     }
 
     if (!parsed || parsed.status === 'error') {
-       // Truncate để tránh response quá lớn
-       const truncated = lastError.length > 1000 ? lastError.slice(-1000) : lastError;
-       throw new Error(`Video editor failed: ${truncated}`);
+      // Truncate để tránh response quá lớn
+      const truncated = lastError.length > 1000 ? lastError.slice(-1000) : lastError;
+      throw new Error(`Video editor failed: ${truncated}`);
+    }
+
+    // Xóa các video cảnh trung gian sau khi đã ghép thành công
+    try {
+      for (const inputPath of inputPaths) {
+        if (fs.existsSync(inputPath)) {
+          fs.unlinkSync(inputPath);
+          console.log(`[Cleanup] Deleted intermediate video: ${inputPath}`);
+        }
+      }
+    } catch (cleanupError: any) {
+      console.error(`[Cleanup] Failed to delete intermediate videos: ${cleanupError.message}`);
     }
 
     res.json({

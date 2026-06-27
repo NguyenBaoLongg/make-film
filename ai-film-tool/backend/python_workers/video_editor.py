@@ -49,16 +49,15 @@ def escape_subtitle_path(abs_path):
     Escape đường dẫn file SRT cho subtitles filter trên Windows.
     FFmpeg subtitles filter dùng libass, cần:
     - Dùng forward slash thay backslash
-    - Escape dấu : (trong C:\\) thành \\:
-    - Escape dấu \\ thành /
+    - Dùng relative path để tránh lỗi ffmpeg-python escape dấu : của ổ đĩa
     - Escape dấu [ ] thành \\[ \\]
     """
-    # Chuyển sang absolute path và dùng forward slash
-    normalized = abs_path.replace('\\', '/')
-    # Escape dấu : (ví dụ D:/... -> D\\:/...)
-    # Chỉ escape dấu : KHÔNG phải sau drive letter (libass cần thế)
-    # Thực ra cách an toàn nhất là escape TẤT CẢ dấu :
-    normalized = normalized.replace(':', '\\:')
+    # Dùng relative path so với thư mục chạy script (backend)
+    # để tránh việc ffmpeg-python escape dấu ":" của ổ đĩa (ví dụ C: thành C\:)
+    # khiến libass không tìm thấy file.
+    rel_path = os.path.relpath(abs_path, os.getcwd())
+    normalized = rel_path.replace('\\', '/')
+    
     # Escape brackets
     normalized = normalized.replace('[', '\\[')
     normalized = normalized.replace(']', '\\]')

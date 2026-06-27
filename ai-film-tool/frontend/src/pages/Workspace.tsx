@@ -15,6 +15,7 @@ import { useStore } from '../store/useStore';
 import { supabase } from '../lib/supabase';
 import BatchModal from '../components/BatchModal';
 import ChromeManager from '../components/ChromeManager';
+import { AutoFilmStudioPanel } from '../components/AutoFilmStudioPanel';
 
 import MediaSourceNode from '../components/nodes/MediaSourceNode';
 import ImageGenNode from '../components/nodes/ImageGenNode';
@@ -75,10 +76,10 @@ function FlowCanvas() {
     >
       <Background variant={BackgroundVariant.Dots} gap={12} size={1} color="#10b98140" />
       <Controls className="bg-card border border-border fill-foreground text-foreground" />
-      <MiniMap 
-        nodeColor="#10b981" 
-        maskColor="#070b14aa" 
-        className="bg-card border border-border" 
+      <MiniMap
+        nodeColor="#10b981"
+        maskColor="#070b14aa"
+        className="bg-card border border-border"
       />
     </ReactFlow>
   );
@@ -140,13 +141,14 @@ function LoadFlowDropdown({ onClose }: { onClose: () => void }) {
 // Main Workspace
 // ============================================================
 export default function Workspace() {
-  const { 
-    concurrency, setConcurrency, filePrefix, setFilePrefix, 
-    isRunning, runPipeline, pipelineProgress, pipelineLogs, nodes 
+  const {
+    concurrency, setConcurrency, filePrefix, setFilePrefix,
+    isRunning, runPipeline, pipelineProgress, pipelineLogs, nodes
   } = useStore();
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [showLoadFlow, setShowLoadFlow] = useState(false);
   const [showChromeManager, setShowChromeManager] = useState(false);
+  const [showAutoFilmStudio, setShowAutoFilmStudio] = useState(false);
 
   const handleRunPipeline = () => {
     runPipeline().catch((error) => {
@@ -208,8 +210,8 @@ export default function Workspace() {
   };
 
   // Progress percentage
-  const progressPct = pipelineProgress.total > 0 
-    ? Math.round((pipelineProgress.completed / pipelineProgress.total) * 100) 
+  const progressPct = pipelineProgress.total > 0
+    ? Math.round((pipelineProgress.completed / pipelineProgress.total) * 100)
     : 0;
 
   return (
@@ -232,8 +234,8 @@ export default function Workspace() {
             <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-1">
               <span className="text-orange-500 text-xs animate-spin">⚙️</span>
               <div className="w-24 bg-secondary rounded-full h-1.5">
-                <div 
-                  className="bg-orange-500 h-1.5 rounded-full transition-all duration-300" 
+                <div
+                  className="bg-orange-500 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
@@ -245,8 +247,8 @@ export default function Workspace() {
 
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Prefix:</span>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={filePrefix}
               onChange={(e) => setFilePrefix(e.target.value)}
               className="w-28 bg-input border border-border px-2 py-1 rounded outline-none focus:border-primary text-xs"
@@ -254,19 +256,19 @@ export default function Workspace() {
           </div>
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Threads:</span>
-            <select 
+            <select
               value={concurrency}
               onChange={(e) => setConcurrency(Number(e.target.value))}
               className="bg-input border border-border px-2 py-1 rounded outline-none focus:border-primary text-xs"
             >
-              {[2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n}</option>)}
+              {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
-          
+
           <div className="h-6 w-px bg-border"></div>
-          
-          <button 
-            onClick={() => setShowLoadFlow(!showLoadFlow)} 
+
+          <button
+            onClick={() => setShowLoadFlow(!showLoadFlow)}
             className="text-xs font-medium hover:text-primary flex items-center gap-1 px-2 py-1 bg-secondary/50 rounded border border-border hover:border-primary transition-colors"
           >
             📂 Load
@@ -277,17 +279,25 @@ export default function Workspace() {
           <button onClick={handleExportJSON} className="text-xs font-medium hover:text-primary flex items-center gap-1 px-2 py-1 bg-secondary/50 rounded border border-border hover:border-primary transition-colors">
             📤 Export
           </button>
-          
+
+          <div className="h-6 w-px bg-border mx-1"></div>
+
           <button 
+            onClick={() => setShowAutoFilmStudio(true)}
+            className="px-4 py-1.5 text-sm font-bold rounded flex items-center gap-2 transition-all bg-indigo-600 text-white hover:bg-indigo-700 shadow-[0_0_15px_rgba(79,70,229,0.4)]"
+          >
+            ✨ Auto Studio
+          </button>
+
+          <button
             onClick={handleRunPipeline}
             disabled={isRunning || nodes.length === 0}
-            className={`px-4 py-1.5 text-sm font-bold rounded flex items-center gap-2 transition-all ${
-              isRunning 
-                ? 'bg-orange-500/20 text-orange-500 cursor-not-allowed border border-orange-500/30' 
+            className={`px-4 py-1.5 text-sm font-bold rounded flex items-center gap-2 transition-all ${isRunning
+                ? 'bg-orange-500/20 text-orange-500 cursor-not-allowed border border-orange-500/30'
                 : nodes.length === 0
                   ? 'bg-primary/20 text-primary/50 cursor-not-allowed'
                   : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
-            }`}
+              }`}
           >
             {isRunning ? (
               <>
@@ -308,7 +318,7 @@ export default function Workspace() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Toolbar */}
         <aside className="w-16 shrink-0 border-r border-border bg-card flex flex-col items-center py-4 gap-4 z-10 shadow-lg">
-          <div 
+          <div
             className="w-10 h-10 bg-secondary border border-border rounded flex items-center justify-center cursor-grab hover:border-primary"
             onDragStart={(event) => onDragStart(event, 'mediaSource')}
             draggable
@@ -316,7 +326,7 @@ export default function Workspace() {
           >
             🖼️
           </div>
-          <div 
+          <div
             className="w-10 h-10 bg-secondary border border-border rounded flex items-center justify-center cursor-grab hover:border-primary"
             onDragStart={(event) => onDragStart(event, 'imageGen')}
             draggable
@@ -324,7 +334,7 @@ export default function Workspace() {
           >
             🎨
           </div>
-          <div 
+          <div
             className="w-10 h-10 bg-secondary border border-border rounded flex items-center justify-center cursor-grab hover:border-primary"
             onDragStart={(event) => onDragStart(event, 'videoGen')}
             draggable
@@ -332,7 +342,7 @@ export default function Workspace() {
           >
             🎬
           </div>
-          <div 
+          <div
             className="w-10 h-10 bg-secondary border border-border rounded flex items-center justify-center cursor-grab hover:border-primary"
             onDragStart={(event) => onDragStart(event, 'concat')}
             draggable
@@ -340,18 +350,18 @@ export default function Workspace() {
           >
             ✂️
           </div>
-          
+
           <div className="w-8 h-px bg-border my-2"></div>
-          
-          <button 
+
+          <button
             onClick={handleBatch}
             className="w-10 h-10 bg-accent text-accent-foreground rounded flex items-center justify-center cursor-pointer hover:bg-accent/80 font-bold text-xs text-center leading-tight"
             title="Batch Combined"
           >
             BATCH
           </button>
-          
-          <button 
+
+          <button
             onClick={() => setShowChromeManager(true)}
             className="w-10 h-10 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded flex items-center justify-center cursor-pointer hover:bg-blue-500/30 hover:border-blue-500/50 transition-colors"
             title="Quản lý Chrome Profile"
@@ -388,6 +398,7 @@ export default function Workspace() {
 
       {showBatchModal && <BatchModal onClose={() => setShowBatchModal(false)} />}
       {showChromeManager && <ChromeManager onClose={() => setShowChromeManager(false)} />}
+      {showAutoFilmStudio && <AutoFilmStudioPanel onClose={() => setShowAutoFilmStudio(false)} />}
     </div>
   );
 }

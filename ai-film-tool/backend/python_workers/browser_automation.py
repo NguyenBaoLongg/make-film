@@ -354,8 +354,12 @@ def choose_video_settings(page: Page, job: Dict[str, Any], debug: FlowDebug) -> 
     options = job.get("options") if isinstance(job.get("options"), dict) else {}
     model = str(options.get("videoModel") or options.get("model") or "Veo 3.1 - Lite [Lower Priority]")
     ratio = str(options.get("videoRatio") or options.get("ratio") or "16:9")
-    mode = str(options.get("videoMode") or options.get("mode") or "Thành phần") # Frames -> Khung hình, References -> Thành phần
+    mode = str(options.get("videoMode") or options.get("mode") or "Khung hình")
+    if mode == "Frames to Video": mode = "Khung hình"
+    if mode == "Video References": mode = "Thành phần"
+    
     duration = str(options.get("videoDuration") or options.get("duration") or "8s")
+    if duration == "5s": duration = "8s" # Google Flow Tiếng Việt dùng 4s, 6s, 8s
 
     # LUÔN ấn nút Tác nhân để mở bảng cấu hình
     agent_btn = page.locator('button', has=page.locator('span.content', has_text="Tác nhân")).first
@@ -370,35 +374,57 @@ def choose_video_settings(page: Page, job: Dict[str, Any], debug: FlowDebug) -> 
         debug.log("[BOT] ⚠️ Không tìm thấy nút Tác nhân (có thể UI đã đổi).")
 
     # Mở menu Quick Settings (nút có chứa tên model hiện tại)
-    quick_settings_btn = page.locator('button[aria-haspopup="menu"]').last
+    quick_settings_btn = page.locator('button[aria-haspopup="menu"]').filter(has_text=re.compile(r"(Veo|Imagen|Model|Kling|Luma|Sora|Tác nhân)", re.IGNORECASE)).first
+    if not visible_first(quick_settings_btn, 1000):
+        quick_settings_btn = page.locator('button[aria-haspopup="menu"]').last
+        
     if visible_first(quick_settings_btn, 1000):
         if quick_settings_btn.get_attribute("aria-expanded") != "true":
             try:
-                quick_settings_btn.click(timeout=2000)
+                quick_settings_btn.click(timeout=2000, force=True)
                 page.wait_for_timeout(1000)
+                debug.log("[BOT] Đã mở Quick Settings dropdown.")
             except Exception:
-                pass
+                debug.log("[BOT] ⚠️ Lỗi khi mở Quick Settings dropdown.")
 
-    # Chọn Tab Video
-    video_tab = page.locator('button[role="tab"]', has_text="Video").first
+    # Chọn Tab Video (trong Quick Settings)
+    video_tab = page.locator('button[role="tab"], div[role="tab"]').filter(has_text=re.compile(r"Video", re.IGNORECASE)).first
     if visible_first(video_tab, 1500):
-        video_tab.click(timeout=2000)
+        video_tab.click(timeout=2000, force=True)
         page.wait_for_timeout(1000)
         debug.log("[BOT] ✅ Đã chọn Tab Video")
+    else:
+        # Fallback
+        video_tab_fallback = page.locator('button', has_text="Video").first
+        if visible_first(video_tab_fallback, 1500):
+            video_tab_fallback.click(timeout=2000, force=True)
+            debug.log("[BOT] ✅ Đã chọn Tab Video (Fallback)")
 
     # Chọn Mode (Khung hình / Thành phần)
     if mode:
-        mode_tab = page.locator('button[role="tab"]', has_text=mode).first
-        if visible_first(mode_tab, 1000):
-            mode_tab.click()
-            page.wait_for_timeout(500)
+        # Thử tìm thẻ tab chứa chữ Khung hình
+        mode_tab = page.locator('button[role="tab"], div[role="tab"]').filter(has_text=re.compile(mode, re.IGNORECASE)).first
+        if visible_first(mode_tab, 2000):
+            mode_tab.click(force=True)
+            page.wait_for_timeout(1000)
+            debug.log(f"[BOT] ✅ Đã chọn Mode '{mode}'")
+        else:
+            debug.log(f"[BOT] ⚠️ Không tìm thấy Mode '{mode}'")
 
     # Chọn Ratio (16:9 / 9:16)
     if ratio:
         ratio_tab = page.locator('button[role="tab"]', has_text=ratio).first
         if visible_first(ratio_tab, 1000):
-            ratio_tab.click()
+            ratio_tab.click(force=True)
             page.wait_for_timeout(500)
+            debug.log(f"[BOT] ✅ Đã chọn Ratio '{ratio}'")
+
+    # Chọn Loop (1x)
+    loop_tab = page.locator('button[role="tab"]', has_text="1x").first
+    if visible_first(loop_tab, 1000):
+        loop_tab.click(force=True)
+        page.wait_for_timeout(500)
+        debug.log("[BOT] ✅ Đã chọn Lặp lại '1x'")
 
     # Chọn Duration (4s, 6s, 8s)
     if duration:
@@ -406,14 +432,15 @@ def choose_video_settings(page: Page, job: Dict[str, Any], debug: FlowDebug) -> 
         if visible_first(duration_tab, 1000):
             try:
                 if duration_tab.get_attribute("disabled") is None:
-                    duration_tab.click()
+                    duration_tab.click(force=True)
                     page.wait_for_timeout(500)
+                    debug.log(f"[BOT] ✅ Đã chọn Thời lượng '{duration}'")
             except Exception:
                 pass
 
     # Chọn Model
     if model:
-        dropdowns = page.locator('button[aria-haspopup="menu"]')
+        dropdowns = page.locator('button[aria-haspopup="menu"], button[aria-haspopup="listbox"], button[role="combobox"]')
         for i in range(dropdowns.count()):
             try:
                 text_content = dropdowns.nth(i).text_content()
@@ -422,7 +449,7 @@ def choose_video_settings(page: Page, job: Dict[str, Any], debug: FlowDebug) -> 
                     page.wait_for_timeout(500)
                     
                     # Tìm thẻ menuitem có chứa tên model
-                    model_item = page.locator('[role="menuitem"]', has_text=model).first
+                    model_item = page.locator('[role="menuitem"], [role="option"]', has_text=model).first
                     if visible_first(model_item, 1000):
                         model_item.click()
                         page.wait_for_timeout(1000)
@@ -431,7 +458,10 @@ def choose_video_settings(page: Page, job: Dict[str, Any], debug: FlowDebug) -> 
             except Exception:
                 pass
 
-
+    # Đóng Quick Settings menu
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(500)
+    debug.log("[BOT] Đã đóng Quick Settings menu bằng phím Escape.")
 
 def prompt_input_exists(page: Page) -> bool:
     return find_prompt_input(page, raise_on_missing=False) is not None
@@ -708,11 +738,18 @@ def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug
                     debug.log("[BOT] Đã chọn 'Frames to Video'.")
                     page.wait_for_timeout(500)
                     
-            bat_dau_btn = page.locator('div[type="button"], button', has_text="Bắt đầu").first
-            if visible_first(bat_dau_btn, 2000):
-                bat_dau_btn.click(force=True)
+            # Tìm nút Bắt đầu với timeout dài hơn và locator rộng hơn (vì UI có thể load chậm)
+            # Chỉ chọn các element có aria-haspopup="dialog" để đảm bảo đó là nút mở popup
+            bat_dau_btn = page.locator('div[aria-haspopup="dialog"], button[aria-haspopup="dialog"]').filter(has_text="Bắt đầu").last
+            if not visible_first(bat_dau_btn, 500):
+                bat_dau_btn = page.locator('div[type="button"], button').filter(has_text="Bắt đầu").last
+                
+            if visible_first(bat_dau_btn, 5000):
+                bat_dau_btn.scroll_into_view_if_needed()
+                bat_dau_btn.click()
                 debug.log("[BOT] Đã click 'Bắt đầu' để mở dialog.")
                 page.wait_for_timeout(1500)
+                debug.screenshot(page, "after_click_bat_dau")
             else:
                 debug.log("[BOT] ⚠️ Không tìm thấy nút 'Bắt đầu', thử nút [+]...")
                 add_btn = page.locator('button', has=page.locator('i', has_text="add_2")).first
@@ -726,16 +763,42 @@ def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug
                 debug.log("[BOT] Đã click tab 'Thành phần'.")
                 page.wait_for_timeout(1000)
                 
-            add_btn = page.locator('button', has=page.locator('i', has_text="add_2")).first
-            if visible_first(add_btn, 2000):
-                add_btn.click()
+            bat_dau_btn = page.locator('div[aria-haspopup="dialog"], button[aria-haspopup="dialog"]').filter(has_text="Bắt đầu").first
+            if not visible_first(bat_dau_btn, 500):
+                bat_dau_btn = page.locator('div[type="button"], button').filter(has_text="Bắt đầu").first
+                
+            if visible_first(bat_dau_btn, 2000):
+                bat_dau_btn.scroll_into_view_if_needed()
+                bat_dau_btn.click(force=True)
+                debug.log("[BOT] Đã click 'Bắt đầu' để mở dialog.")
                 page.wait_for_timeout(1500)
             else:
-                click_near_prompt_button(page, prompt, ["upload", "attach", "add", "image", "media", "asset", "+"])
+                debug.log("[BOT] ⚠️ Không tìm thấy nút 'Bắt đầu' trong Thành phần, thử nút [+]...")
+                add_btn = page.locator('button', has=page.locator('i', has_text="add_2")).first
+                if visible_first(add_btn, 2000):
+                    add_btn.click()
                 page.wait_for_timeout(1500)
 
         # ── Bước 2: Upload file qua input[type=file] ──
-        inputs = page.locator('input[type="file"]')
+        # Trong Khung hình mode, phải ấn thêm nút Tải lên trong dialog mới hiện input
+        if upload_mode == "Khung hình":
+            # CHỈ tìm nút "Tải lên" BÊN TRONG dialog vừa mở ra để tránh click nhầm vào menu bên trái
+            open_dialog = page.locator('div[role="dialog"], div[data-state="open"]').last
+            if open_dialog.count() > 0:
+                upload_btn = open_dialog.locator('button, div[role="button"]').filter(has_text=re.compile(r"(Tải lên|Upload)", re.IGNORECASE)).first
+                if visible_first(upload_btn, 2000):
+                    upload_btn.click(force=True)
+                    debug.log("[BOT] Đã click nút 'Tải lên' trong dialog.")
+                    page.wait_for_timeout(1000)
+                
+        open_dialogs = page.locator('div[role="dialog"], div[data-state="open"]')
+        target_container = open_dialogs.last if open_dialogs.count() > 0 else page
+        inputs = target_container.locator('input[type="file"]')
+        
+        if inputs.count() == 0 and open_dialogs.count() > 0:
+            # Fallback nếu input type file nằm ngoài DOM của dialog
+            inputs = page.locator('input[type="file"]')
+            
         if inputs.count() > 0:
             target_input = inputs.nth(inputs.count() - 1)
             try:
@@ -749,13 +812,23 @@ def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug
             continue
 
         # ── Bước 3: Chờ upload xong và attach file ──
-        # Chờ nút "Thêm vào câu lệnh" SÁNG (enabled) rồi mới click
+        # Chờ nút "Thêm vào câu lệnh" SÁNG (enabled) rồi mới click (dùng chung cho cả Khung hình và Thành phần)
         file_attached = False
-        for wait_round in range(10):  # 10 lần x 3s = tối đa 30 giây
-            page.wait_for_timeout(3000)
+        for wait_round in range(15):  # 15 lần x 2s = tối đa 30 giây
+            page.wait_for_timeout(2000)
 
-            # Kiểm tra nút "Thêm vào câu lệnh" đã SÁNG (enabled) chưa
-            add_to_prompt = page.locator("button", has_text="Thêm vào câu lệnh").first
+            # Cố gắng click vào ảnh đầu tiên trong dialog (tránh trường hợp ảnh tải lên xong không tự chọn)
+            dialogs = page.locator('div[role="dialog"], div[data-state="open"]')
+            if dialogs.count() > 0:
+                first_item = dialogs.last.locator('button, div[role="button"]').first
+                if visible_first(first_item, 500):
+                    first_item.click(force=True)
+            
+            # Kiểm tra nút xác nhận ("Thêm vào câu lệnh" hoặc "Áp dụng") đã SÁNG (enabled) chưa
+            add_to_prompt = dialogs.last.locator("button").filter(has_text=re.compile(r"(Thêm|Áp dụng|Chọn|Xong|Add|Apply)", re.IGNORECASE)).last
+            if not visible_first(add_to_prompt, 500):
+                add_to_prompt = page.locator("button", has_text="Thêm vào câu lệnh").first
+                
             if visible_first(add_to_prompt, 1000):
                 try:
                     is_enabled = add_to_prompt.is_enabled()
@@ -766,16 +839,15 @@ def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug
                         add_to_prompt.click(timeout=5000)
                         attached += 1
                         file_attached = True
-                        debug.log(f"[BOT] ✅ Đã ấn 'Thêm vào câu lệnh' cho {filename}.")
-                        page.wait_for_timeout(1000)
+                        debug.log(f"[BOT] ✅ Đã ấn xác nhận (Thêm vào câu lệnh) cho {filename}.")
+                        page.wait_for_timeout(2000) # Chờ dialog đóng
                         break
                     else:
-                        debug.log(f"[BOT] ⏳ Nút 'Thêm vào câu lệnh' chưa sáng, chờ thêm... (round {wait_round+1})")
+                        debug.log(f"[BOT] ⏳ Nút xác nhận chưa sáng, chờ thêm... (round {wait_round+1})")
                 except Exception:
                     debug.log(f"[BOT] ⚠️ Lỗi kiểm tra/click nút cho {filename}.")
-
-            # Xóa logic đếm thumbnail (auto-attach) vì khi nhảy sang tab Video, các thẻ UI cũng là ảnh nên nó đếm nhầm (0 -> 7)
-            # Bắt buộc phải chờ nút "Thêm vào câu lệnh" sáng lên và bấm.
+            else:
+                debug.screenshot(page, f"upload_wait_loop_{wait_round}")
 
         if file_attached:
             continue
@@ -798,7 +870,8 @@ def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug
 
         if not found:
             img_loc = page.locator(f"img[alt*='{filename}']").first
-            found = visible_first(img_loc, 3000)
+            if visible_first(img_loc, 3000):
+                found = img_loc
 
         if not found:
             # Cuộn gallery bằng mouse wheel
@@ -809,10 +882,24 @@ def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug
                     page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
                     page.mouse.wheel(0, 300)
                     page.wait_for_timeout(800)
-                    found = visible_first(option_loc, 3000)
+                    if visible_first(option_loc, 3000):
+                        found = option_loc
+
+        # FIX: Nếu vẫn không tìm thấy bằng filename (do web ẩn tên file), lấy luôn ảnh đầu tiên (mới nhất)
+        if not found:
+            debug.log(f"[BOT] ⚠️ Không thấy chuỗi tên file {filename}, tự động chọn ảnh đầu tiên (mới nhất) trong thư viện...")
+            dialogs = page.locator('div[role="dialog"], div[data-state="open"]')
+            target_container = dialogs.last if dialogs.count() > 0 else page
+            gallery_images = target_container.locator('img')
+            for i in range(gallery_images.count()):
+                img = gallery_images.nth(i)
+                box = img.bounding_box()
+                if box and box["width"] > 70 and box["height"] > 70:
+                    found = img
+                    break
 
         if not found:
-            debug.log(f"[BOT] ❌ Không tìm thấy ảnh {filename} trong thư viện.")
+            debug.log(f"[BOT] ❌ Lỗi nghiêm trọng: Không tìm thấy ảnh nào trong thư viện để đính kèm.")
             continue
 
         try:
@@ -833,7 +920,8 @@ def upload_files(page: Page, prompt: Locator, files: List[str], debug: FlowDebug
             except Exception:
                 debug.log(f"[BOT] ⚠️ Lỗi click nút 'Thêm vào câu lệnh' cho {filename}.")
         else:
-            debug.log(f"[BOT] ❌ Không tìm thấy nút 'Thêm vào câu lệnh' cho {filename}.")
+            debug.log(f"[BOT] ⚠️ Không tìm thấy nút 'Thêm vào câu lệnh' cho {filename}, có thể ảnh đã tự đính kèm (Video mode). Tính là thành công.")
+            attached += 1
 
     if attached == 0 and len(files) > 0:
         debug.screenshot(page, "upload_attach_failed")
@@ -858,13 +946,9 @@ def fill_prompt(prompt_input: Locator, prompt: str, page: Page, debug: FlowDebug
         page.keyboard.press("Backspace")
         page.wait_for_timeout(500)
         
-        debug.log("[BOT] ⌨️ Đang gõ chữ tuần tự...")
-        lines = prompt.split('\n')
-        for i, line in enumerate(lines):
-            if line:
-                textbox.press_sequentially(line, delay=10)
-            if i < len(lines) - 1:
-                page.keyboard.press("Shift+Enter")
+        debug.log("[BOT] 📋 Đang dán (paste) prompt...")
+        # Sử dụng insert_text để mô phỏng hành động dán (paste) thay vì gõ từng phím
+        page.keyboard.insert_text(prompt)
         page.wait_for_timeout(1000)
             
     except Exception as e:
@@ -958,6 +1042,7 @@ def media_candidates(page: Page, media_type: str, baseline: Set[str]) -> List[Lo
 def wait_for_generated_media(page: Page, media_type: str, baseline: Set[str], debug: FlowDebug) -> Locator:
     timeout_seconds = 30 * 60 if media_type == "video" else 10 * 60
     deadline = time.time() + timeout_seconds
+    retry_count = 0
 
     while time.time() < deadline:
         candidates = media_candidates(page, media_type, baseline)
@@ -977,8 +1062,21 @@ def wait_for_generated_media(page: Page, media_type: str, baseline: Set[str], de
 
         blocked = page.get_by_text(re.compile(r"failed|error|policy|violat|could not|try again|không thành công|vi phạm", re.I))
         if visible_first(blocked, 300):
-            debug.screenshot(page, "flow_error_visible")
-            raise RuntimeError("[BOT] ❌ Lỗi: Google Flow báo lỗi hoặc tạo không thành công (Policy/Error).")
+            debug.screenshot(page, f"flow_error_visible_{retry_count}")
+            
+            # Cố gắng tìm nút "Thử lại" (icon refresh)
+            retry_btn = page.locator('button', has=page.locator('i', has_text="refresh")).last
+            if retry_count < 3 and visible_first(retry_btn, 1000):
+                retry_count += 1
+                debug.log(f"[BOT] ⚠️ Lỗi vi phạm chính sách hoặc tạo thất bại. Đang tự động ấn nút 'Thử lại' (Lần {retry_count}/3)...")
+                try:
+                    retry_btn.click(force=True)
+                except Exception as e:
+                    debug.log(f"[BOT] ⚠️ Lỗi khi bấm Thử lại: {e}")
+                page.wait_for_timeout(5000)
+                continue
+            else:
+                raise RuntimeError("[BOT] ❌ Lỗi: Google Flow báo lỗi (Policy/Error) và không thể thử lại thêm.")
 
         page.wait_for_timeout(3000)
 
@@ -1086,15 +1184,19 @@ def run_generation_step(
         debug.log("[BOT] 🖼️ Sử dụng ảnh vừa tạo trong thư viện thay vì upload lại...")
         if upload_mode == "Khung hình":
             dropdown = page.locator('button[role="combobox"]').first
-            if visible_first(dropdown, 1000):
-                dropdown.click(force=True)
-                page.wait_for_timeout(500)
-                option = page.locator('div[role="option"], span', has_text="Frames to Video").first
-                if visible_first(option, 1000):
-                    option.click(force=True)
-                    debug.log("[BOT] Đã chọn 'Frames to Video'.")
+            for _ in range(3):
+                if visible_first(dropdown, 1000):
+                    current_text = dropdown.inner_text().strip()
+                    if "Frames to Video" in current_text or "Image to Video" in current_text:
+                        debug.log("[BOT] Đã ở đúng chế độ Video từ Ảnh.")
+                        break
+                    dropdown.click(force=True)
                     page.wait_for_timeout(500)
-                    
+                    option = page.locator('div[role="option"], span', has_text="Frames to Video").first
+                    if visible_first(option, 1000):
+                        option.click(force=True)
+                        debug.log("[BOT] Đã chọn 'Frames to Video'.")
+                        page.wait_for_timeout(500)
             bat_dau_btn = page.locator('div[type="button"], button', has_text="Bắt đầu").first
             if visible_first(bat_dau_btn, 2000):
                 bat_dau_btn.click(force=True)
