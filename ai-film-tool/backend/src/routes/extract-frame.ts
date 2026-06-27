@@ -25,16 +25,13 @@ router.post('/', (req: Request, res: Response): void => {
     const frameFileName = videoFileName.replace(/\.[^/.]+$/, "") + "_last_frame.jpg";
     const framePath = path.join(process.cwd(), 'generated', frameFileName);
 
-    // Cách lấy frame cuối robust nhất cho video ngắn (4-8s):
-    // Decode toàn bộ video và ghi đè liên tục lên file ảnh (update 1).
-    // Khi video kết thúc, file ảnh sẽ chứa frame cuối cùng. 
-    // Tránh được lỗi timecode hoặc header hỏng của sseof.
     const ffmpegCmd = 'ffmpeg';
     const args = [
-      '-y', 
+      '-sseof', '-0.5',
       '-i', videoPath,
-      '-update', '1',
+      '-frames:v', '1',
       '-q:v', '2',
+      '-y',
       framePath
     ];
 
