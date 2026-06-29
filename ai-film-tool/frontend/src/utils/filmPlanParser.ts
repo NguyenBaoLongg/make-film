@@ -10,11 +10,11 @@ export function parseFilmPlanToNodes(plan: any): { nodes: Node[]; edges: Edge[] 
   const characters = plan.characters || [];
   const locations = plan.locations || [];
   const scenes = plan.scenes || [];
-  
+
   if (characters.length === 0) {
     throw new Error("Lỗi: Kịch bản không có thông tin Nhân vật (Characters). Yêu cầu ChatGPT tạo lại!");
   }
-  
+
   if (locations.length === 0) {
     throw new Error("Lỗi: Kịch bản không có thông tin Bối cảnh (Locations). Yêu cầu ChatGPT tạo lại!");
   }
@@ -148,8 +148,8 @@ ${styleSuffix}`;
   scenes.forEach((scene: any) => {
     const shots = scene.shots || [];
     shots.forEach((shot: any) => {
-      const imageNodeId = `img_${shot.id}`;
-      const videoNodeId = `vid_${shot.id}`;
+      const imageNodeId = `img_s${shotGlobalIndex}_${shot.id}`;
+      const videoNodeId = `vid_s${shotGlobalIndex}_${shot.id}`;
 
       // Create ImageGen for shot
       nodes.push({
@@ -172,7 +172,7 @@ ${styleSuffix}`;
         let sourceNodeId = '';
         const charRef = characters.find((c: any) => c.id === refId);
         const locRef = locations.find((l: any) => l.id === refId);
-        
+
         if (charRef) {
           sourceNodeId = `char_${refId}`;
           refsList.push(charRef);
@@ -199,13 +199,14 @@ ${styleSuffix}`;
         type: 'videoGen',
         position: { x: 400, y },
         data: {
-          motionPrompt: `${shot.video_prompt}\n\n[MANDATORY VIDEO STYLE]\nUse the provided image as the exact mandatory first frame.\nKeep the same stylized 3D toy-like preschool animation style.\nDo not redesign characters, outfit, face, colors, body proportions, lighting, or environment.\nNo photorealism. No real humans. No live-action. No style shift.`,
+          motionPrompt: `${shot.video_prompt}\n\n[MANDATORY VIDEO STYLE]\nUse the provided image as the exact mandatory first frame.\nKeep the same stylized 3D toy-like preschool animation style.\nDo not redesign characters, outfit, face, colors, body proportions, lighting, or environment.\nNo photorealism. No real humans. No live-action. No style shift.\nNo background music. Keep ambient sound and foley/SFX for character actions.`,
           model: 'Veo 3.1 - Lite [Lower Priority]', // Default fast model
           duration: `${shot.duration_seconds || 4}s`,
           ratio: plan.project?.aspect_ratio || '16:9',
           mode: 'Frames to Video', // Key point from user's rules
           sceneIndex: shotGlobalIndex,
           title: `Scene ${shotGlobalIndex} (Video)`,
+          narration: shot.voiceover_vi || shot.dialogue_vi || '',
         },
       });
 
@@ -232,6 +233,8 @@ ${styleSuffix}`;
     data: {
       title: 'Final Render',
       autoSubtitles: true,
+      ttsEnabled: true,
+      ttsVoice: 'vi-VN-HoaiMyNeural',
       bgmUrl: '',
       topic: plan.project?.title || 'Auto Generated Film',
     },

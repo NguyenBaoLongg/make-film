@@ -101,7 +101,7 @@ export default function ConcatNode({ id, data }: { id: string; data: any }) {
               <p className="text-[9px] text-muted-foreground mt-1">Hỗ trợ các định dạng MP3, WAV hoặc link OGG.</p>
             </div>
 
-            <div className="pt-2 border-t border-border">
+            <div className="pt-2 border-t border-border space-y-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -111,6 +111,32 @@ export default function ConcatNode({ id, data }: { id: string; data: any }) {
                 />
                 <span className="text-xs text-muted-foreground">Tự động nghe và tạo phụ đề (Whisper)</span>
               </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="accent-primary w-3 h-3"
+                  checked={data.ttsEnabled || false}
+                  onChange={(e) => updateNodeData(id, { ttsEnabled: e.target.checked })}
+                />
+                <span className="text-xs text-muted-foreground">🎙️ Thuyết minh Microsoft Voice</span>
+              </label>
+
+              {data.ttsEnabled && (
+                <div>
+                  <label className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Giọng đọc</label>
+                  <select
+                    className="w-full bg-input border border-border rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                    value={data.ttsVoice || 'vi-VN-HoaiMyNeural'}
+                    onChange={(e) => updateNodeData(id, { ttsVoice: e.target.value })}
+                  >
+                    <option value="vi-VN-HoaiMyNeural">🇻🇳 Hoài My (Nữ)</option>
+                    <option value="vi-VN-NamMinhNeural">🇻🇳 Nam Minh (Nam)</option>
+                    <option value="en-US-AriaNeural">🇺🇸 Aria (Nữ - Anh)</option>
+                    <option value="en-US-GuyNeural">🇺🇸 Guy (Nam - Anh)</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         )}

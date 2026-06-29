@@ -2,6 +2,17 @@ import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { supabase } from '../lib/supabase';
 
+const STYLE_PRESETS = [
+  { id: 'netflix', label: '🎬 Điện ảnh Netflix', style: 'Netflix original series aesthetic, Arri Alexa 65, moody cinematic color grading, hyper-detailed, photorealistic, cinematic lighting' },
+  { id: 'blind_box', label: '🧸 3D Art Toy', style: 'Popmart blind box style, cute chibi 3D character, glossy plastic material, studio lighting, octane render, trending on artstation' },
+  { id: 'dark_fantasy', label: '⚔️ Dark Fantasy', style: 'Dark fantasy aesthetic, grimdark, 8k resolution, Unreal Engine 5 render, dramatic chiaroscuro lighting, intricate details, epic' },
+  { id: 'cyberpunk', label: '🌃 Cyberpunk', style: 'Cyberpunk aesthetic, neon lighting, gritty sci-fi, rainy city, hyper-realistic, 8k, Ray tracing, cinematic' },
+  { id: 'retro_anime', label: '📼 90s Retro Anime', style: '1990s retro anime style, VHS aesthetic, cel shading, vintage color palette, nostalgic, highly detailed background' },
+  { id: 'pixar', label: '🎈 3D Pixar', style: 'Pixar 3D animation style, rounded toy-like characters, soft subsurface lighting, vibrant pastel colors, cinematic composition, high-quality 3D render' },
+  { id: 'anime', label: '🌸 Anime', style: 'High quality Japanese anime style, Studio Ghibli, beautiful background, cel shading, vibrant colors' },
+  { id: 'custom', label: '✏️ Tùy chỉnh', style: '' }
+];
+
 export function AutoFilmStudioPanel({ onClose }: { onClose: () => void }) {
   const generateFilmPlan = useStore((s) => s.generateFilmPlan);
   const applyFilmPlan = useStore((s) => s.applyFilmPlan);
@@ -10,10 +21,21 @@ export function AutoFilmStudioPanel({ onClose }: { onClose: () => void }) {
   const [idea, setIdea] = useState('');
   const [duration, setDuration] = useState('60');
   const [aspectRatio, setAspectRatio] = useState('16:9');
-  const [style, setStyle] = useState('Original preschool 3D animation, rounded toy-like characters, bright colors');
+  const [language, setLanguage] = useState('Vietnamese');
+  
+  const [activeStyleId, setActiveStyleId] = useState('pixar');
+  const [style, setStyle] = useState(STYLE_PRESETS[0].style);
+  const [videoStyle, setVideoStyle] = useState('Smooth Pixar-quality 3D animation, fluid character movement, cinematic camera, no style shift');
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+
+  const handleStyleSelect = (preset: typeof STYLE_PRESETS[0]) => {
+    setActiveStyleId(preset.id);
+    if (preset.id !== 'custom') {
+      setStyle(preset.style);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!idea.trim()) return;
@@ -25,7 +47,8 @@ export function AutoFilmStudioPanel({ onClose }: { onClose: () => void }) {
         duration,
         aspectRatio,
         style,
-        language: 'Vietnamese',
+        videoStyle,
+        language,
         audience: 'Family and children',
       });
       applyFilmPlan(plan);
@@ -69,7 +92,7 @@ export function AutoFilmStudioPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-2xl bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-6 relative">
+      <div className="w-full max-w-2xl bg-[#1e212b] border border-gray-700 rounded-xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
         <button 
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -96,22 +119,22 @@ export function AutoFilmStudioPanel({ onClose }: { onClose: () => void }) {
           Nhập ý tưởng của bạn, AI (ChatGPT) sẽ tự động viết kịch bản, quy hoạch nhân vật, bối cảnh và thiết kế toàn bộ luồng tạo video.
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Ý tưởng nội dung</label>
             <textarea
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 min-h-[120px]"
+              className="w-full bg-[#252836] border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 min-h-[120px]"
               placeholder="VD: Một chú heo Bobo đi xe buýt cùng bạn bè, hát vui trên đường đến trường..."
               value={idea}
               onChange={(e) => setIdea(e.target.value)}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Thời lượng (giây)</label>
               <select 
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white"
+                className="w-full bg-[#252836] border border-gray-700 rounded-lg p-2.5 text-white"
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
               >
@@ -124,7 +147,7 @@ export function AutoFilmStudioPanel({ onClose }: { onClose: () => void }) {
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Tỉ lệ khung hình</label>
               <select 
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white"
+                className="w-full bg-[#252836] border border-gray-700 rounded-lg p-2.5 text-white"
                 value={aspectRatio}
                 onChange={(e) => setAspectRatio(e.target.value)}
               >
@@ -133,15 +156,54 @@ export function AutoFilmStudioPanel({ onClose }: { onClose: () => void }) {
                 <option value="1:1">1:1 (Square)</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Ngôn ngữ</label>
+              <select 
+                className="w-full bg-[#252836] border border-gray-700 rounded-lg p-2.5 text-white"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              >
+                <option value="Vietnamese">Tiếng Việt</option>
+                <option value="English">English</option>
+                <option value="Japanese">Japanese</option>
+                <option value="Korean">Korean</option>
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Phong cách hình ảnh (Visual Style)</label>
-            <input
-              type="text"
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white placeholder-gray-500"
+            <label className="block text-sm font-medium text-gray-300 mb-2">Phong cách hình ảnh</label>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {STYLE_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handleStyleSelect(preset)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                    activeStyleId === preset.id
+                      ? 'bg-indigo-600/80 text-white border-indigo-500'
+                      : 'bg-[#252836] text-gray-400 border-gray-700 hover:bg-gray-700 hover:text-gray-200'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <textarea
+              className="w-full bg-[#252836]/50 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 min-h-[70px] text-sm"
               value={style}
-              onChange={(e) => setStyle(e.target.value)}
+              onChange={(e) => {
+                setStyle(e.target.value);
+                if (activeStyleId !== 'custom') setActiveStyleId('custom');
+              }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Phong cách chuyển động (Video Motion Style)</label>
+            <textarea
+              className="w-full bg-[#252836]/50 border border-indigo-500/30 rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 min-h-[60px] text-sm"
+              value={videoStyle}
+              onChange={(e) => setVideoStyle(e.target.value)}
             />
           </div>
 

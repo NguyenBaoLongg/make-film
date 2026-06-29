@@ -70,7 +70,7 @@ export default function VideoGenNode({ id, data }: { id: string; data: any }) {
           <div className="space-y-2">
             <div>
               <label className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">Motion Prompt</label>
-              <input 
+              <input
                 type="text"
                 className="w-full bg-input border border-border rounded px-2 py-1 text-xs outline-none focus:border-primary"
                 placeholder="Slow pan, dramatic lighting..."
@@ -78,6 +78,22 @@ export default function VideoGenNode({ id, data }: { id: string; data: any }) {
                 onChange={(event) => updateNodeData(id, { motionPrompt: event.target.value })}
               />
             </div>
+          </div>
+        )}
+
+        {/* Narration text (editable) */}
+        {data.status !== 'processing' && (
+          <div>
+            <label className="text-[10px] text-muted-foreground block mb-1 uppercase tracking-wider">
+              🎙️ Lời thuyết minh
+            </label>
+            <textarea
+              className="w-full bg-input border border-border rounded px-2 py-1 text-xs outline-none focus:border-primary resize-none"
+              rows={2}
+              placeholder="Nhập lời thuyết minh cho cảnh này..."
+              value={data.narration || ""}
+              onChange={(event) => updateNodeData(id, { narration: event.target.value })}
+            />
           </div>
         )}
 

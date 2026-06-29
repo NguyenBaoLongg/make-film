@@ -520,23 +520,23 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   updateNodeData: (nodeId, data) => {
-    set({
-      nodes: get().nodes.map((node) => (
+    set((state) => ({
+      nodes: state.nodes.map((node) => (
         node.id === nodeId
           ? { ...node, data: { ...node.data, ...data } }
           : node
       )),
-    });
+    }));
   },
 
   updateNodeStatus: (nodeId, status, errorMessage) => {
-    set({
-      nodes: get().nodes.map((node) => (
+    set((state) => ({
+      nodes: state.nodes.map((node) => (
         node.id === nodeId
           ? { ...node, data: { ...node.data, status, errorMessage } }
           : node
       )),
-    });
+    }));
   },
 
   runPipeline: async () => {
@@ -587,46 +587,79 @@ export const useStore = create<AppState>((set, get) => ({
 
     try {
       const pairedVideoIds = new Set<string>();
-      let flowProjectUrl = '';
-      let shouldCreateProject = true;
-
-      for (const mediaNode of mediaNodes) {
-        get().updateNodeStatus(mediaNode.id, 'completed');
-        get().addPipelineLog(`Media ready: ${mediaNode.id}`);
-        markStepDone();
+      // Process scenes concurrently in batches of 4
+      const limit = 4;
+      const chunks: Node[][] = [];
+      for (let i = 0; i < imageNodes.length; i += limit) {
+        chunks.push(imageNodes.slice(i, i + limit));
       }
 
-      if (imageNodes.length === 0 && videoNodes.length > 0) {
-        throw new Error('Pipeline requires each video node to be connected after an image node.');
-      }
+      for (const chunk of chunks) {
+        await Promise.all(chunk.map(async (imageNodeBase) => {
+          const index = imageNodes.indexOf(imageNodeBase);
+          const imageNode = get().nodes.find((node) => node.id === imageNodeBase.id);
+          if (!imageNode) return;
 
-      let previousLastFrameUrl: string | null = null;
+          const sceneIndex = dataNumber(imageNode, 'sceneIndex', index + 1);
+          let imagePrompt = dataString(imageNode, 'prompt', `Scene ${sceneIndex} image`);
 
-      for (let index = 0; index < imageNodes.length; index += 1) {
-        const imageNode = get().nodes.find((node) => node.id === imageNodes[index].id);
-        if (!imageNode) continue;
+          // Check if there's any connected MediaSource nodes
+          const connectedMediaInputs = collectConnectedImageInputs(imageNode.id, get().nodes, initialEdges);
+          const referenceImages = connectedMediaInputs
+            .map((url) => {
+              if (url.startsWith('http')) return url;
+              return url;
+            })
+            .filter(Boolean);
 
-        const sceneIndex = dataNumber(imageNode, 'sceneIndex', index + 1);
-        let imagePrompt = dataString(imageNode, 'prompt', `Scene ${sceneIndex} image`);
-        const referenceImages = collectConnectedImageInputs(imageNode.id, get().nodes, initialEdges);
+          get().updateNodeStatus(imageNode.id, 'processing');
+          get().addPipelineLog(`Scene ${sceneIndex}: start image node ${imageNode.id}.`);
 
-        if (sceneIndex > 0 && previousLastFrameUrl) {
-          referenceImages.push(previousLastFrameUrl);
-          imagePrompt = `${imagePrompt}\n\n[CONTINUITY] Please use the attached last frame as the exact starting point and continue the action seamlessly. Do not change character appearance, clothing, or environment lighting.`;
-          get().addPipelineLog(`Scene ${sceneIndex}: injected last frame from previous shot & continuity prompt.`);
-        }
-        const videosForImage = findConnectedVideos(imageNode.id, get().nodes, initialEdges);
+          // Find connected video node
+          const videosForImage = get().nodes.filter(
+            (node) => node.type === 'videoGen' &&
+            initialEdges.some((edge) => edge.source === imageNode.id && edge.target === node.id),
+          );
 
-        get().updateNodeStatus(imageNode.id, 'processing');
-        get().addPipelineLog(`Scene ${sceneIndex}: start image node ${imageNode.id}, refs=${referenceImages.length}.`);
+          if (videosForImage.length === 0) {
+            if (imageNode.data?.status === 'completed' && imageNode.data?.resultUrl) {
+              get().addPipelineLog(`Standalone image ${imageNode.id} already exists, skipping.`);
+              markStepDone();
+              return;
+            }
 
-        if (videosForImage.length === 1) {
+            const imageResult = await createFlowImage({
+              prompt: imagePrompt,
+              referenceImages,
+              node: imageNode,
+              filePrefix: get().filePrefix,
+              sceneIndex,
+              projectUrl: '',
+              createProject: true,
+              onLog: get().addPipelineLog,
+            });
+
+            if (!imageResult.result_url) {
+              throw new Error(`Standalone image ${imageNode.id} finished without a result URL`);
+            }
+
+            get().updateNodeData(imageNode.id, {
+              resultUrl: imageResult.result_url,
+              localPath: imageResult.local_path,
+            });
+            get().updateNodeStatus(imageNode.id, 'completed');
+            get().addPipelineLog(`Standalone image ${imageNode.id} completed.`);
+            markStepDone();
+            return;
+          }
+
           const videoNodeBase = videosForImage[0];
           const videoNode = get().nodes.find((node) => node.id === videoNodeBase.id);
-          if (!videoNode) continue;
+          if (!videoNode) return;
 
           pairedVideoIds.add(videoNode.id);
           const videoPrompt = dataString(videoNode, 'motionPrompt', `Scene ${sceneIndex} motion`);
+
           get().addPipelineLog(`Scene ${sceneIndex}: image+video will run in one Chrome session.`);
 
           let imageMarkedDone = false;
@@ -686,11 +719,10 @@ export const useStore = create<AppState>((set, get) => ({
                 node: videoNode,
                 filePrefix: get().filePrefix,
                 sceneIndex,
-                projectUrl: flowProjectUrl,
+                projectUrl: '', // Run independently
                 onLog: get().addPipelineLog,
               });
 
-              flowProjectUrl = videoResult.project_url || flowProjectUrl;
               applySceneVideo({
                 ...videoResult,
                 result_url: videoResult.video_result_url || videoResult.result_url,
@@ -709,16 +741,13 @@ export const useStore = create<AppState>((set, get) => ({
               videoNode,
               filePrefix: get().filePrefix,
               sceneIndex,
-              projectUrl: flowProjectUrl,
-              createProject: shouldCreateProject,
+              projectUrl: '', // Run independently
+              createProject: true, // Each concurrent thread creates its own project
               onLog: get().addPipelineLog,
               onImageDone: applySceneImage,
               onVideoDone: applySceneVideo,
               onSceneDone: () => get().addPipelineLog(`Scene ${sceneIndex}: scene completed.`),
             });
-
-            flowProjectUrl = sceneResult.project_url || flowProjectUrl;
-            shouldCreateProject = false;
 
             applySceneImage({
               ...sceneResult,
@@ -738,106 +767,7 @@ export const useStore = create<AppState>((set, get) => ({
               throw new Error(`Video scene ${sceneIndex} finished without a result URL`);
             }
           }
-
-          if (sceneIndex > 0) {
-            const finalVideoUrl = imageNode.data.resultUrl; 
-            if (finalVideoUrl) {
-              get().addPipelineLog(`Scene ${sceneIndex}: extracting last frame...`);
-              try {
-                const frameUrl = await extractLastFrame(finalVideoUrl, get().addPipelineLog);
-                if (frameUrl) {
-                  previousLastFrameUrl = frameUrl;
-                  get().updateNodeData(videoNode.id, { lastFrameUrl: frameUrl });
-                  get().addPipelineLog(`Scene ${sceneIndex}: last frame extracted and saved for next shot.`);
-                } else {
-                  throw new Error("extractLastFrame returned null");
-                }
-              } catch (e) {
-                get().updateNodeStatus(videoNode.id, 'error', `Failed to extract last frame: ${e}`);
-                throw new Error(`Failed to extract last frame for Scene ${sceneIndex}`);
-              }
-            }
-          }
-
-          continue;
-        }
-
-        const imageResult = await createFlowImage({
-          prompt: imagePrompt,
-          referenceImages,
-          node: imageNode,
-          filePrefix: get().filePrefix,
-          sceneIndex,
-          projectUrl: flowProjectUrl,
-          createProject: shouldCreateProject,
-          onLog: get().addPipelineLog,
-        });
-
-        flowProjectUrl = imageResult.project_url || flowProjectUrl;
-        shouldCreateProject = false;
-
-        if (!imageResult.result_url) {
-          throw new Error(`Image scene ${sceneIndex} finished without a result URL`);
-        }
-
-        get().updateNodeData(imageNode.id, {
-          resultUrl: imageResult.result_url,
-          localPath: imageResult.local_path,
-        });
-        get().updateNodeStatus(imageNode.id, 'completed');
-        get().addPipelineLog(`Scene ${sceneIndex}: image completed.`);
-        markStepDone();
-
-        for (const videoNodeBase of videosForImage) {
-          const videoNode = get().nodes.find((node) => node.id === videoNodeBase.id);
-          if (!videoNode) continue;
-
-          pairedVideoIds.add(videoNode.id);
-          const videoPrompt = dataString(videoNode, 'motionPrompt', `Scene ${sceneIndex} motion`);
-          get().updateNodeStatus(videoNode.id, 'processing');
-          get().addPipelineLog(`Scene ${sceneIndex}: start video node ${videoNode.id}.`);
-
-          const videoResult = await createFlowVideo({
-            prompt: videoPrompt,
-            sourceImageUrl: imageResult.result_url,
-            node: videoNode,
-            filePrefix: get().filePrefix,
-            sceneIndex,
-            projectUrl: flowProjectUrl,
-            onLog: get().addPipelineLog,
-          });
-
-          flowProjectUrl = videoResult.project_url || flowProjectUrl;
-
-          if (!videoResult.result_url) {
-            throw new Error(`Video scene ${sceneIndex} finished without a result URL`);
-          }
-
-          get().updateNodeData(videoNode.id, {
-            resultUrl: videoResult.result_url,
-            localPath: videoResult.local_path,
-          });
-          get().updateNodeStatus(videoNode.id, 'completed');
-          get().addPipelineLog(`Scene ${sceneIndex}: video completed.`);
-          markStepDone();
-
-          if (sceneIndex > 0 && videoResult.result_url) {
-            get().addPipelineLog(`Scene ${sceneIndex}: extracting last frame...`);
-            try {
-              const frameUrl = await extractLastFrame(videoResult.result_url, get().addPipelineLog);
-              if (frameUrl) {
-                previousLastFrameUrl = frameUrl;
-                get().updateNodeData(videoNode.id, { lastFrameUrl: frameUrl });
-                get().addPipelineLog(`Scene ${sceneIndex}: last frame extracted and saved for next shot.`);
-              } else {
-                throw new Error("extractLastFrame returned null");
-              }
-            } catch (e) {
-              get().updateNodeStatus(videoNode.id, 'error', `Failed to extract last frame: ${e}`);
-              throw new Error(`Failed to extract last frame for Scene ${sceneIndex}`);
-            }
-          }
-        }
+        }));
       }
 
       const orphanVideos = videoNodes.filter((node) => !pairedVideoIds.has(node.id));

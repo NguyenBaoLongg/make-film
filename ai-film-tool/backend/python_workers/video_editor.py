@@ -52,16 +52,17 @@ def escape_subtitle_path(abs_path):
     - Dùng relative path để tránh lỗi ffmpeg-python escape dấu : của ổ đĩa
     - Escape dấu [ ] thành \\[ \\]
     """
-    # Dùng relative path so với thư mục chạy script (backend)
-    # để tránh việc ffmpeg-python escape dấu ":" của ổ đĩa (ví dụ C: thành C\:)
-    # khiến libass không tìm thấy file.
-    rel_path = os.path.relpath(abs_path, os.getcwd())
-    normalized = rel_path.replace('\\', '/')
+    # Đưa file ra ngoài root dir (cwd) và chỉ truyền tên file.
+    # FFmpeg subtitles filter trên Windows cực kỳ lỗi với absolute path qua ffmpeg-python
+    # Cách tốt nhất: copy file ra cwd, và chỉ đưa tên file (vd: "sub-123.srt")
+    import shutil
+    basename = os.path.basename(abs_path)
+    cwd_path = os.path.join(os.getcwd(), basename)
+    if abs_path != cwd_path and os.path.exists(abs_path):
+        shutil.copy2(abs_path, cwd_path)
     
-    # Escape brackets
-    normalized = normalized.replace('[', '\\[')
-    normalized = normalized.replace(']', '\\]')
-    return normalized
+    # Trả về chỉ mỗi tên file, không có slashes hay colons để libass khỏi nhầm lẫn
+    return basename
 
 def find_font():
     """
@@ -129,12 +130,19 @@ def has_audio(path):
 def run(job_path):
     with open(job_path, 'r', encoding='utf-8') as f:
         job = json.load(f)
-        
+
     video_urls = job.get('videoUrls', [])
     bgm_url = job.get('bgmUrl', '')
     video_title = str(job.get('videoTitle') or '').strip()
     auto_subtitles = job.get('auto_subtitles', False)
     output_path = job.get('output_path')
+    # narration_paths: list of {index: int, audio_path: str} — one per scene
+    narration_paths_raw = job.get('narration_paths', [])
+    narration_by_index = {
+        int(item['index']): item['audio_path']
+        for item in narration_paths_raw
+        if item.get('audio_path') and os.path.isfile(item['audio_path'])
+    }
     
     if not video_urls:
         return {"status": "error", "message": "No video URLs provided."}
@@ -150,6 +158,7 @@ def run(job_path):
     srt_path = os.path.join(temp_dir, f"sub-{uuid.uuid4().hex}.srt")
     temp_wav_path = os.path.join(temp_dir, f"audio-{uuid.uuid4().hex}.wav")
     temp_bgm_path = None  # Sẽ set nếu download BGM từ URL
+    temp_title_path = None
     
     has_subs = False
     
@@ -170,31 +179,64 @@ def run(job_path):
                 print(f"Warning: BGM file not found: {bgm_url}, sẽ bỏ qua.", file=sys.stderr)
         
         # === BƯỚC 1: Tạo phụ đề tự động (Whisper) ===
+        # Extract audio per-video into separate WAV files, then concat using the concat demuxer.
+        # This avoids ffmpeg-python filter graph "multiple outgoing edges" errors.
         if auto_subtitles:
             print("Extracting audio for subtitle generation...", file=sys.stderr)
-            audio_streams = []
-            for vid in video_urls:
-                in_file = ffmpeg.input(vid)
-                if has_audio(vid):
-                    audio_streams.append(in_file.audio.filter('aresample', 16000))
-                else:
-                    dur = get_duration(vid)
-                    audio_streams.append(
-                        ffmpeg.input('anullsrc=r=16000:cl=mono', format='lavfi', t=str(dur)).audio
-                    )
-            
-            if len(audio_streams) == 1:
-                joined_audio = audio_streams[0]
-            else:
-                joined_audio = ffmpeg.concat(*audio_streams, v=0, a=1)
-            
-            try:
-                ffmpeg.output(joined_audio, temp_wav_path, acodec='pcm_s16le', ac=1, ar=16000) \
-                    .run(overwrite_output=True, quiet=True)
-            except ffmpeg.Error as e:
-                stderr_text = e.stderr.decode('utf8', errors='ignore') if e.stderr else 'unknown'
-                print(f"Warning: Failed to extract audio for subtitles: {stderr_text}", file=sys.stderr)
-                # Tiếp tục mà không có phụ đề
+            seg_audio_paths = []
+            extract_ok = True
+
+            for i, vid in enumerate(video_urls):
+                seg_path = os.path.join(temp_dir, f"whisper_seg_{i}_{uuid.uuid4().hex}.wav")
+                try:
+                    if has_audio(vid):
+                        (ffmpeg.input(vid).audio
+                            .filter('aresample', 16000)
+                            .output(seg_path, acodec='pcm_s16le', ac=1, ar=16000)
+                            .run(overwrite_output=True, quiet=True))
+                    else:
+                        dur = get_duration(vid)
+                        (ffmpeg.input('anullsrc=r=16000:cl=mono', format='lavfi', t=str(dur)).audio
+                            .output(seg_path, acodec='pcm_s16le', ac=1, ar=16000)
+                            .run(overwrite_output=True, quiet=True))
+                    seg_audio_paths.append(seg_path)
+                except Exception as e:
+                    print(f"Warning: Failed to extract audio segment {i}: {e}", file=sys.stderr)
+                    extract_ok = False
+                    break
+
+            if extract_ok and seg_audio_paths:
+                try:
+                    if len(seg_audio_paths) == 1:
+                        import shutil as _shutil
+                        _shutil.move(seg_audio_paths[0], temp_wav_path)
+                        seg_audio_paths = []
+                    else:
+                        # Build concat list file (demuxer approach — no filter graph)
+                        list_file = os.path.join(temp_dir, f"whisper_list_{uuid.uuid4().hex}.txt")
+                        with open(list_file, 'w', encoding='utf-8') as lf:
+                            for p in seg_audio_paths:
+                                safe_p = os.path.abspath(p).replace('\\', '/')
+                                lf.write(f"file '{safe_p}'\n")
+                        try:
+                            (ffmpeg.input(list_file, format='concat', safe=0).audio
+                                .output(temp_wav_path, acodec='pcm_s16le', ac=1, ar=16000)
+                                .run(overwrite_output=True, quiet=True))
+                        finally:
+                            if os.path.exists(list_file):
+                                os.remove(list_file)
+                except Exception as e:
+                    print(f"Warning: Failed to join audio segments: {e}", file=sys.stderr)
+                    extract_ok = False
+                finally:
+                    for p in seg_audio_paths:
+                        if p and os.path.exists(p):
+                            try:
+                                os.remove(p)
+                            except OSError:
+                                pass
+
+            if not extract_ok:
                 auto_subtitles = False
         
         if auto_subtitles and os.path.isfile(temp_wav_path):
@@ -220,8 +262,16 @@ def run(job_path):
                 
                 srt_path = temp_wav_path.replace(".wav", ".srt")
                 if os.path.exists(srt_path):
-                    has_subs = True
-                    print(f"Subtitles generated: {srt_path}", file=sys.stderr)
+                    # Kiểm tra xem file có chứa phụ đề hợp lệ không (tránh lỗi file rỗng do video không có tiếng)
+                    with open(srt_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        srt_content = f.read()
+                    
+                    if '-->' in srt_content:
+                        has_subs = True
+                        print(f"Subtitles generated: {srt_path}", file=sys.stderr)
+                    else:
+                        print(f"Subtitles file is empty (silent video), skipping.", file=sys.stderr)
+                        has_subs = False
             except ImportError:
                 print("Warning: Whisper not installed, skipping subtitles.", file=sys.stderr)
             except Exception as e:
@@ -244,8 +294,9 @@ def run(job_path):
         
         v_inputs = []
         a_inputs = []
-        for vid in video_urls:
-            in_file = ffmpeg.input(vid)
+        for scene_idx, vid in enumerate(video_urls):
+            # Thêm probesize khác nhau để trick ffmpeg-python không deduplicate các input trùng lặp
+            in_file = ffmpeg.input(vid, probesize=5000000 + scene_idx)
             # Normalize video to target resolution and 30fps
             v = in_file.video \
                 .filter('scale', target_width, target_height, force_original_aspect_ratio='decrease') \
@@ -253,13 +304,25 @@ def run(job_path):
                 .filter('setsar', 1) \
                 .filter('fps', fps=30, round='near') \
                 .filter('format', 'yuv420p')
-            
+
+            dur = get_duration(vid)
             if has_audio(vid):
-                a = in_file.audio.filter('aformat', sample_rates='44100', channel_layouts='stereo')
+                ambient = in_file.audio.filter('aformat', sample_rates='44100', channel_layouts='stereo')
             else:
-                dur = get_duration(vid)
-                a = ffmpeg.input('anullsrc=r=44100:cl=stereo', format='lavfi', t=str(dur)).audio
-                
+                ambient = ffmpeg.input('anullsrc=r=44100:cl=stereo', format='lavfi', t=str(dur)).audio
+
+            narration_path = narration_by_index.get(scene_idx)
+            if narration_path:
+                print(f"[VideoEditor] Scene {scene_idx}: mixing narration {narration_path}", file=sys.stderr)
+                # Duck ambient to 20%, narration at 100%, pad narration to scene duration
+                narration_audio = ffmpeg.input(narration_path).audio \
+                    .filter('aformat', sample_rates='44100', channel_layouts='stereo') \
+                    .filter('apad', whole_dur=str(dur))
+                ambient_ducked = ambient.filter('volume', '0.2')
+                a = ffmpeg.filter([ambient_ducked, narration_audio], 'amix', inputs=2, duration='first')
+            else:
+                a = ambient
+
             v_inputs.append(v)
             a_inputs.append(a)
 
@@ -317,11 +380,18 @@ def run(job_path):
             
             # Line 2: Actual Title (Tên tập phim thực tế)
             if video_title:
-                safe_title = escape_drawtext(video_title.upper())
-                print(f"Adding title overlay: {video_title} -> escaped: {safe_title}", file=sys.stderr)
+                temp_title_path = os.path.join(temp_dir, f"title-{uuid.uuid4().hex}.txt")
+                with open(temp_title_path, 'w', encoding='utf-8') as f:
+                    f.write(video_title.upper())
+                
+                # FFmpeg textfile path on Windows needs proper formatting
+                # Using relative path with forward slashes bypasses drive letter escaping issues
+                rel_textfile = os.path.relpath(temp_title_path, os.getcwd()).replace('\\', '/')
+                
+                print(f"Adding title overlay via textfile: {video_title} -> {rel_textfile}", file=sys.stderr)
                 v_stream = v_stream.filter(
                     'drawtext',
-                    text=safe_title,
+                    textfile=rel_textfile,
                     fontfile=font_path,
                     fontcolor='white',
                     fontsize=35,
@@ -386,10 +456,19 @@ def run(job_path):
         return {"status": "error", "message": f"{type(e).__name__}: {e}"}
     finally:
         # Cleanup tất cả temp files
-        for temp_file in [srt_path, temp_wav_path, temp_bgm_path]:
+        for temp_file in [srt_path, temp_wav_path, temp_bgm_path, temp_title_path]:
             if temp_file and os.path.exists(temp_file):
                 try:
                     os.remove(temp_file)
+                except OSError:
+                    pass
+        
+        # Cleanup cả file SRT ở root nếu có copy
+        if srt_path:
+            root_srt = os.path.join(os.getcwd(), os.path.basename(srt_path))
+            if os.path.exists(root_srt):
+                try:
+                    os.remove(root_srt)
                 except OSError:
                     pass
 

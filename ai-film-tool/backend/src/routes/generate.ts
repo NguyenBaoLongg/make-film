@@ -12,6 +12,7 @@ const jobsDir = path.join(process.cwd(), 'tmp', 'jobs');
 const workerLogsDir = path.join(generatedDir, '_logs');
 const flowWorkerScript = path.join(process.cwd(), 'python_workers', 'browser_automation.py');
 const videoWorkerScript = path.join(process.cwd(), 'python_workers', 'video_editor.py');
+const ttsWorkerScript = path.join(process.cwd(), 'python_workers', 'tts_worker.py');
 
 type WorkerType = 'image' | 'video' | 'scene';
 
@@ -182,6 +183,31 @@ function parseWorkerJson(stdout: string) {
 async function runFlowWorker(payload: FlowJobPayload, onEvent?: WorkerEventHandler) {
   ensureRuntimeDirs();
   const jobId = safeRunId(payload.run_id || crypto.randomUUID());
+  
+  // Profile Cloning for Concurrency
+  const profilesDir = path.join(process.cwd(), 'chrome_profiles');
+  const sourceProfile = path.join(profilesDir, payload.profile || 'default');
+  const tempProfileName = `worker_${jobId}`;
+  const tempProfilePath = path.join(profilesDir, tempProfileName);
+  
+  try {
+    if (fs.existsSync(sourceProfile)) {
+      console.log(`[Flow Worker] Cloning profile ${sourceProfile} to ${tempProfilePath}...`);
+      fs.cpSync(sourceProfile, tempProfilePath, { 
+        recursive: true, 
+        filter: (src) => {
+          const lower = src.toLowerCase();
+          return !lower.includes('cache') && !lower.includes('code cache') && !lower.includes('service worker');
+        }
+      });
+      // Override profile in payload so worker uses the clone
+      payload.profile = tempProfileName;
+    }
+  } catch (err) {
+    console.error(`[Flow Worker] Failed to clone profile:`, err);
+    // fallback to default if copy fails
+  }
+
   const jobPath = path.join(jobsDir, `${jobId}.json`);
   fs.writeFileSync(jobPath, JSON.stringify(payload, null, 2), 'utf8');
   fs.writeFileSync(logPathForRunId(jobId), '', 'utf8');
@@ -267,6 +293,14 @@ async function runFlowWorker(payload: FlowJobPayload, onEvent?: WorkerEventHandl
         type: 'log',
         data: { runId: jobId, message: 'job completed successfully' },
       });
+      
+      // Cleanup temp profile
+      try {
+        if (tempProfileName.startsWith('worker_') && fs.existsSync(tempProfilePath)) {
+          fs.rmSync(tempProfilePath, { recursive: true, force: true });
+        }
+      } catch (e) { console.error('Failed to cleanup temp profile:', e); }
+      
       return parsed;
     } catch (error: any) {
       flushWorkerLines();
@@ -285,6 +319,14 @@ async function runFlowWorker(payload: FlowJobPayload, onEvent?: WorkerEventHandl
     type: 'log',
     data: { runId: jobId, message: `job failed: ${lastError}` },
   });
+  
+  // Cleanup temp profile on error
+  try {
+    if (tempProfileName.startsWith('worker_') && fs.existsSync(tempProfilePath)) {
+      fs.rmSync(tempProfilePath, { recursive: true, force: true });
+    }
+  } catch (e) { console.error('Failed to cleanup temp profile:', e); }
+  
   throw new Error(`Could not run Python Flow worker. ${lastError}`);
 }
 
@@ -572,6 +614,8 @@ router.post('/concat-videos', async (req, res) => {
     autoSubtitles,
     filePrefix = 'film',
     videoTitle = '',
+    narrations,
+    ttsVoice = 'vi-VN-HoaiMyNeural',
   } = req.body;
 
   if (!Array.isArray(videoUrls) || videoUrls.length === 0) {
@@ -590,9 +634,51 @@ router.post('/concat-videos', async (req, res) => {
         try {
           resolvedBgmPath = resolveGeneratedUrlToPath(bgmUrl);
         } catch {
-          // If it's not a generated asset, just pass it (e.g. an absolute path)
           resolvedBgmPath = bgmUrl;
         }
+      }
+    }
+
+    // === TTS: Generate per-scene narration audio ===
+    let narrationPaths: { index: number; audio_path: string }[] = [];
+    const hasNarrations = Array.isArray(narrations) && narrations.some((n: any) => n.text?.trim());
+
+    if (hasNarrations) {
+      const ttsJobId = safeRunId(crypto.randomUUID());
+      const ttsJobPath = path.join(jobsDir, `tts-job-${ttsJobId}.json`);
+      const ttsOutDir = path.join(jobsDir, `tts-${ttsJobId}`);
+
+      const ttsJobPayload = {
+        texts: narrations.map((n: any) => ({ index: n.index, text: String(n.text || '') })),
+        voice: String(ttsVoice),
+        output_dir: ttsOutDir,
+        rate: '-10%',
+      };
+      fs.writeFileSync(ttsJobPath, JSON.stringify(ttsJobPayload, null, 2), 'utf8');
+
+      console.log(`[TTS] Running tts_worker for ${narrations.length} scene(s), voice=${ttsVoice}`);
+
+      let ttsResult: any = null;
+      let ttsError = '';
+      for (const candidate of getPythonCandidates()) {
+        const args = [...candidate.argsPrefix, ttsWorkerScript, '--job', ttsJobPath];
+        try {
+          const result = await runProcess(candidate.command, args);
+          if (result.stderr) console.log(`[TTS stderr] ${result.stderr.slice(-1000)}`);
+          if (result.code !== 0) { ttsError = result.stderr || `TTS exited code ${result.code}`; continue; }
+          ttsResult = result.stdout.trim() ? parseWorkerJson(result.stdout) : null;
+          if (!ttsResult || ttsResult.error) { ttsError = ttsResult?.error || 'TTS no output'; continue; }
+          break;
+        } catch (err: any) {
+          ttsError = err.message;
+        }
+      }
+
+      if (ttsResult?.results) {
+        narrationPaths = ttsResult.results.filter((r: any) => r.audio_path);
+        console.log(`[TTS] Generated ${narrationPaths.length} narration file(s)`);
+      } else {
+        console.warn(`[TTS] Failed: ${ttsError} — continuing without narration`);
       }
     }
 
@@ -605,7 +691,8 @@ router.post('/concat-videos', async (req, res) => {
       bgmUrl: resolvedBgmPath,
       auto_subtitles: Boolean(autoSubtitles),
       output_path: outputPath,
-      videoTitle: String(videoTitle)
+      videoTitle: String(videoTitle),
+      narration_paths: narrationPaths,
     };
     fs.writeFileSync(jobPath, JSON.stringify(jobPayload, null, 2), 'utf8');
 
